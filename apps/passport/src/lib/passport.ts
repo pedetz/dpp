@@ -24,8 +24,6 @@ export async function getPassportByGtin(gtin: string): Promise<PublicPassport | 
     .from('public_passports')
     .select('*')
     .eq('gtin', gtin)
-    .order('version', { ascending: false })
-    .limit(1)
     .maybeSingle()
 
   if (error || !data) return null
@@ -44,12 +42,14 @@ export async function getPassportBySlug(slug: string): Promise<PublicPassport | 
 }
 
 export async function getVersionHistory(productSlug: string): Promise<VersionEntry[]> {
-  const baseSlug = productSlug.replace(/-v\d+$/, '')
+  const passport = await getPassportBySlug(productSlug)
+  if (!passport) return []
 
   const { data, error } = await supabase
     .from('public_passports')
     .select('version, published_at, slug')
-    .or(`slug.eq.${productSlug},slug.like.${baseSlug}-v%`)
+    .eq('name', passport.name)
+    .eq('gtin', passport.gtin ?? '')
     .order('version', { ascending: false })
 
   if (error || !data) return []

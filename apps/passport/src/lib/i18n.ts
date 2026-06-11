@@ -1,5 +1,5 @@
-import it from '../i18n/it.json'
-import en from '../i18n/en.json'
+import itTranslations from '../i18n/it.json'
+import enTranslations from '../i18n/en.json'
 
 export type Lang = 'it' | 'en'
 
@@ -9,7 +9,10 @@ export function getLang(url: URL): Lang {
   return 'it'
 }
 
-const translations: Record<Lang, Record<string, string>> = { it, en }
+const translations: Record<Lang, Record<string, string>> = {
+  it: itTranslations,
+  en: enTranslations,
+}
 
 export function getTranslation(lang: Lang, key: string): string {
   return translations[lang][key] ?? translations['it'][key] ?? key

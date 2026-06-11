@@ -1,0 +1,123 @@
+---
+import PassportLayout from '@/layouts/PassportLayout.astro'
+import BrandHeader from '@/components/BrandHeader.astro'
+import ProductGallery from '@/components/ProductGallery.astro'
+import PassportMeta from '@/components/PassportMeta.astro'
+import LanguageSwitch from '@/components/LanguageSwitch.astro'
+import VersionHistory from '@/components/VersionHistory.astro'
+import CertificationsSection from '@/components/CertificationsSection.astro'
+import FieldSection from '@/components/sections/FieldSection.astro'
+import CompositionSection from '@/components/sections/CompositionSection.astro'
+import CountrySection from '@/components/sections/CountrySection.astro'
+import PercentSection from '@/components/sections/PercentSection.astro'
+import CareSection from '@/components/sections/CareSection.astro'
+import TextSection from '@/components/sections/TextSection.astro'
+import { getPassportByGtin, getVersionHistory } from '@/lib/passport'
+import { getLang, getTranslation } from '@/lib/i18n'
+import type { FieldType } from '@/lib/fields'
+import { FIELD_KEYS } from '@/lib/fields'
+
+export const prerender = false
+
+const { gtin } = Astro.params as { gtin: string }
+
+const passport = await getPassportByGtin(gtin)
+if (!passport) {
+  return Astro.redirect('/404', 302)
+}
+
+const lang = getLang(Astro.url)
+const versions = await getVersionHistory(passport.slug)
+
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600')
+
+interface FieldDef {
+  key: string
+  type: FieldType
+  label_it?: string
+  label_en?: string
+}
+
+const fields: FieldDef[] = FIELD_KEYS.map((key) => {
+  const raw = (passport.data as Record<string, unknown>)[`_field_${key}`]
+  if (raw && typeof raw === 'object' && 'type' in (raw as object)) {
+    return { key, ...(raw as object) } as FieldDef
+  }
+  return { key, type: 'textarea' as FieldType }
+})
+
+const certifications = Array.isArray((passport.data as Record<string, unknown>).certifications)
+  ? ((passport.data as Record<string, unknown>).certifications as { kind: string; valid_until?: string }[])
+  : []
+---
+
+<PassportLayout
+  title={`${passport.name} — ${getTranslation(lang, 'passport_title')}`}
+  description={`${getTranslation(lang, 'passport_title')} ${passport.brand_name}: ${passport.name}`}
+  ogImage={passport.images[0]}
+  lang={lang}
+>
+  <BrandHeader brandName={passport.brand_name} logoUrl={passport.logo_url} lang={lang} />
+
+  <div class="max-w-2xl mx-auto px-4 py-2 flex items-center justify-between">
+    <PassportMeta version={passport.version} publishedAt={passport.published_at} lang={lang} />
+    <LanguageSwitch currentLang={lang} currentUrl={Astro.url} />
+  </div>
+
+  <ProductGallery images={passport.images} name={passport.name} />
+
+  <main class="max-w-2xl mx-auto px-4 pb-8">
+    <h1 class="text-xl font-bold text-gray-900 mb-4">{passport.name}</h1>
+
+    {FIELD_KEYS.map((key) => {
+      const value = (passport.data as Record<string, unknown>)[key]
+      if (value === null || value === undefined || value === '') return null
+
+      const fieldDef = fields.find(f => f.key === key)
+      const type = fieldDef?.type ?? 'textarea'
+      const title = getTranslation(lang, key) !== key
+        ? getTranslation(lang, key)
+        : (lang === 'it' ? (fieldDef?.label_it ?? key) : (fieldDef?.label_en ?? key))
+
+      if (type === 'composition') {
+        return (
+          <FieldSection title={title}>
+            <CompositionSection data={value as Record<string, number>} />
+          </FieldSection>
+        )
+      }
+      if (type === 'country') {
+        return (
+          <FieldSection title={title}>
+            <CountrySection code={value as string} />
+          </FieldSection>
+        )
+      }
+      if (type === 'percent' || type === 'number') {
+        return (
+          <FieldSection title={title}>
+            <PercentSection value={Number(value)} />
+          </FieldSection>
+        )
+      }
+      if (type === 'care_symbols') {
+        return (
+          <FieldSection title={title}>
+            <CareSection symbols={value as string[]} />
+          </FieldSection>
+        )
+      }
+      return (
+        <FieldSection title={title}>
+          <TextSection text={String(value)} />
+        </FieldSection>
+      )
+    })}
+
+    {certifications.length > 0 && (
+      <CertificationsSection certifications={certifications} lang={lang} />
+    )}
+
+    <VersionHistory versions={versions} lang={lang} />
+  </main>
+</PassportLayout>

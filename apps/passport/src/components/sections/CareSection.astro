@@ -1,0 +1,37 @@
+---
+interface Props {
+  symbols: string[]
+}
+
+const { symbols } = Astro.props
+
+const careSymbols: Record<string, { emoji: string; label_it: string }> = {
+  lavabile_30:      { emoji: '🧺', label_it: 'Lavare a 30°C' },
+  lavabile_40:      { emoji: '🧺', label_it: 'Lavare a 40°C' },
+  lavabile_60:      { emoji: '🧺', label_it: 'Lavare a 60°C' },
+  non_lavare:       { emoji: '🚫', label_it: 'Non lavare' },
+  lavaggio_delicato:{ emoji: '🫧', label_it: 'Lavaggio delicato' },
+  asciugatrice_ok:  { emoji: '🌀', label_it: 'Asciugatrice consentita' },
+  non_asciugatrice: { emoji: '⛔', label_it: 'Non usare asciugatrice' },
+  stirare_bassa:    { emoji: '🌡️', label_it: 'Stirare a bassa temperatura' },
+  stirare_media:    { emoji: '🌡️', label_it: 'Stirare a media temperatura' },
+  stirare_alta:     { emoji: '🌡️', label_it: 'Stirare ad alta temperatura' },
+  non_stirare:      { emoji: '❌', label_it: 'Non stirare' },
+  pulizia_secco:    { emoji: '🧪', label_it: 'Pulizia a secco' },
+  non_pulizia_secco:{ emoji: '🚷', label_it: 'Non pulire a secco' },
+  candeggio_ok:     { emoji: '💧', label_it: 'Candeggio consentito' },
+  non_candeggio:    { emoji: '🚫', label_it: 'Non candeggiare' },
+}
+---
+
+<div class="flex flex-wrap gap-4">
+  {symbols.map((sym) => {
+    const info = careSymbols[sym] ?? { emoji: '❓', label_it: sym.replace(/_/g, ' ') }
+    return (
+      <div class="flex flex-col items-center gap-1 min-w-[56px]">
+        <span class="text-2xl leading-none" aria-hidden="true">{info.emoji}</span>
+        <span class="text-xs text-gray-600 text-center leading-tight max-w-[64px]">{info.label_it}</span>
+      </div>
+    )
+  })}
+</div>

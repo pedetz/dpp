@@ -1,0 +1,40 @@
+---
+import type { Lang } from '@/lib/i18n'
+
+interface Props {
+  data: Record<string, number>
+  lang: Lang
+}
+
+const { data } = Astro.props
+
+const palette = [
+  '#2d7a50',
+  '#1a4731',
+  '#4a9e6e',
+  '#a8d5b8',
+  '#7bc5a0',
+  '#0f2d1f',
+  '#3d8c60',
+  '#6ab88e',
+]
+
+const entries = Object.entries(data).filter(([, v]) => typeof v === 'number' && v > 0)
+---
+
+<div class="space-y-2">
+  {entries.map(([fiber, pct], i) => (
+    <div>
+      <div class="flex justify-between text-sm mb-1">
+        <span class="capitalize text-gray-700">{fiber.replace(/_/g, ' ')}</span>
+        <span class="font-medium text-gray-800">{pct}%</span>
+      </div>
+      <div class="w-full bg-gray-100 rounded-full h-2">
+        <div
+          class="h-2 rounded-full"
+          style={`width: ${pct}%; background-color: ${palette[i % palette.length]};`}
+        />
+      </div>
+    </div>
+  ))}
+</div>

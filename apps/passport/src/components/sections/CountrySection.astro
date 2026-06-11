@@ -1,0 +1,49 @@
+---
+interface Props {
+  code: string
+}
+
+const { code } = Astro.props
+
+const countryNames: Record<string, string> = {
+  AF: 'Afghanistan', AL: 'Albania', DZ: 'Algeria', AD: 'Andorra', AO: 'Angola',
+  AR: 'Argentina', AM: 'Armenia', AU: 'Australia', AT: 'Austria', AZ: 'Azerbaigian',
+  BD: 'Bangladesh', BE: 'Belgio', BJ: 'Benin', BO: 'Bolivia', BA: 'Bosnia Erzegovina',
+  BR: 'Brasile', BG: 'Bulgaria', KH: 'Cambogia', CM: 'Camerun', CA: 'Canada',
+  CF: 'Repubblica Centrafricana', CL: 'Cile', CN: 'Cina', CO: 'Colombia',
+  HR: 'Croazia', CY: 'Cipro', CZ: 'Repubblica Ceca', DK: 'Danimarca', EG: 'Egitto',
+  ET: 'Etiopia', FI: 'Finlandia', FR: 'Francia', GE: 'Georgia', DE: 'Germania',
+  GH: 'Ghana', GR: 'Grecia', GT: 'Guatemala', HN: 'Honduras', HK: 'Hong Kong',
+  HU: 'Ungheria', IN: 'India', ID: 'Indonesia', IR: 'Iran', IQ: 'Iraq',
+  IE: 'Irlanda', IL: 'Israele', IT: 'Italia', JP: 'Giappone', JO: 'Giordania',
+  KZ: 'Kazakistan', KE: 'Kenya', KR: 'Corea del Sud', KP: 'Corea del Nord',
+  KW: 'Kuwait', KG: 'Kirghizistan', LA: 'Laos', LB: 'Libano', LY: 'Libia',
+  LT: 'Lituania', LU: 'Lussemburgo', MK: 'Macedonia del Nord', MG: 'Madagascar',
+  MY: 'Malesia', ML: 'Mali', MT: 'Malta', MX: 'Messico', MD: 'Moldavia',
+  MN: 'Mongolia', MA: 'Marocco', MZ: 'Mozambico', MM: 'Myanmar', NP: 'Nepal',
+  NL: 'Paesi Bassi', NZ: 'Nuova Zelanda', NI: 'Nicaragua', NG: 'Nigeria',
+  NO: 'Norvegia', OM: 'Oman', PK: 'Pakistan', PA: 'Panama', PY: 'Paraguay',
+  PE: 'Perù', PH: 'Filippine', PL: 'Polonia', PT: 'Portogallo', QA: 'Qatar',
+  RO: 'Romania', RU: 'Russia', SA: 'Arabia Saudita', SN: 'Senegal', RS: 'Serbia',
+  SL: 'Sierra Leone', SK: 'Slovacchia', SI: 'Slovenia', ZA: 'Sudafrica',
+  ES: 'Spagna', LK: 'Sri Lanka', SD: 'Sudan', SE: 'Svezia', CH: 'Svizzera',
+  TW: 'Taiwan', TJ: 'Tagikistan', TZ: 'Tanzania', TH: 'Tailandia', TN: 'Tunisia',
+  TR: 'Turchia', TM: 'Turkmenistan', UG: 'Uganda', UA: 'Ucraina',
+  AE: 'Emirati Arabi Uniti', GB: 'Regno Unito', US: 'Stati Uniti', UY: 'Uruguay',
+  UZ: 'Uzbekistan', VN: 'Vietnam', YE: 'Yemen', ZM: 'Zambia', ZW: 'Zimbabwe',
+}
+
+function flagEmoji(countryCode: string): string {
+  const upper = countryCode.toUpperCase()
+  return [...upper].map(c => String.fromCodePoint(0x1F1E0 - 65 + c.charCodeAt(0))).join('')
+}
+
+const upper = code.toUpperCase()
+const flag = flagEmoji(upper)
+const name = countryNames[upper] ?? code
+---
+
+<div class="flex items-center gap-3">
+  <span class="text-4xl leading-none" aria-hidden="true">{flag}</span>
+  <span class="text-base font-medium text-gray-800">{name}</span>
+</div>

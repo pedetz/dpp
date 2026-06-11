@@ -1,34 +1,34 @@
-export type FieldType = 'composition' | 'country' | 'percent' | 'care_symbols' | 'textarea' | 'certifications'
+export type FieldType = 'composition' | 'country' | 'percent' | 'care_symbols' | 'textarea' | 'text' | 'number' | 'date'
 
 export interface FieldRenderInfo {
   component: string
-  fieldType: FieldType
+  type: FieldType
 }
 
-export function getFieldRenderInfo(key: string, value: unknown): FieldRenderInfo | null {
-  if (key === 'composition' && typeof value === 'object' && value !== null && !Array.isArray(value)) {
-    return { component: 'CompositionSection', fieldType: 'composition' }
+export function getFieldRenderInfo(type: FieldType): FieldRenderInfo {
+  const map: Record<FieldType, string> = {
+    composition: 'CompositionSection',
+    country: 'CountrySection',
+    percent: 'PercentSection',
+    care_symbols: 'CareSection',
+    textarea: 'TextSection',
+    text: 'TextSection',
+    number: 'PercentSection',
+    date: 'TextSection',
   }
-
-  if ((key === 'country_weaving' || key === 'country_manufacture') && typeof value === 'string') {
-    return { component: 'CountrySection', fieldType: 'country' }
-  }
-
-  if (key === 'recycled_content' && typeof value === 'number') {
-    return { component: 'PercentSection', fieldType: 'percent' }
-  }
-
-  if (key === 'care_instructions' && Array.isArray(value)) {
-    return { component: 'CareSection', fieldType: 'care_symbols' }
-  }
-
-  if (key === 'certifications' && Array.isArray(value)) {
-    return { component: 'CertificationsSection', fieldType: 'certifications' }
-  }
-
-  if (typeof value === 'string') {
-    return { component: 'TextSection', fieldType: 'textarea' }
-  }
-
-  return null
+  return { component: map[type], type }
 }
+
+export const FIELD_KEYS = [
+  'composition',
+  'country_weaving',
+  'country_manufacture',
+  'recycled_content',
+  'care_instructions',
+  'end_of_life',
+  'svhc_substances',
+  'durability',
+  'certifications',
+] as const
+
+export type FieldKey = typeof FIELD_KEYS[number]
