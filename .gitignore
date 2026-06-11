@@ -1,1 +1,6 @@
-.claude/
+node_modules
+dist
+.env
+.turbo
+supabase/.branches
+supabase/.temp
