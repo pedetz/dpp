@@ -5,10 +5,12 @@ interface Props {
   title: string
   description: string
   ogImage?: string
+  brandName: string
+  category: string
   lang: Lang
 }
 
-const { title, description, ogImage, lang } = Astro.props
+const { title, description, ogImage, brandName, category, lang } = Astro.props
 
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600')
 ---
@@ -20,8 +22,8 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-r
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
+    <meta property="og:title" content={`${title} — ${brandName}`} />
+    <meta property="og:description" content={`Digital Product Passport — ${category}`} />
     <meta property="og:type" content="product" />
     {ogImage && <meta property="og:image" content={ogImage} />}
     <meta name="robots" content="noindex, nofollow" />
