@@ -1,0 +1,23 @@
+{
+  "passport_title": "Passaporto Digitale",
+  "brand_label": "Produttore",
+  "version_label": "Versione",
+  "published_label": "Pubblicato il",
+  "composition_title": "Composizione fibre",
+  "composition": "Composizione fibre",
+  "country_weaving": "Paese di tessitura",
+  "country_manufacture": "Paese di confezione",
+  "recycled_content": "Contenuto riciclato",
+  "care_instructions": "Istruzioni di cura",
+  "end_of_life": "Istruzioni fine vita",
+  "svhc_substances": "Sostanze SVHC",
+  "durability": "Durabilità e riparabilità",
+  "certifications": "Certificazioni",
+  "certifications_title": "Certificazioni",
+  "version_history": "Storico versioni",
+  "not_found_title": "Passaporto non trovato",
+  "not_found_desc": "Il QR code potrebbe essere danneggiato o il prodotto non è più disponibile.",
+  "language_switch_label": "Lingua",
+  "cert_valid_until": "Valida fino al",
+  "go_home": "Torna alla home"
+}

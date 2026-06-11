@@ -1,0 +1,35 @@
+---
+import type { Lang } from '@/lib/i18n'
+import { getTranslation } from '@/lib/i18n'
+
+interface Props {
+  certifications: Array<{ type: string; valid_until?: string }>
+  lang: Lang
+}
+
+const { certifications, lang } = Astro.props
+
+function formatDate(dateStr: string): string {
+  return new Intl.DateTimeFormat(lang === 'it' ? 'it-IT' : 'en-GB', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date(dateStr))
+}
+---
+
+<ul class="space-y-3">
+  {certifications.map((cert) => (
+    <li class="flex items-start gap-3 text-sm">
+      <span class="text-[#2d7a50] mt-0.5 text-base">✓</span>
+      <div>
+        <span class="font-medium text-gray-800">{cert.type}</span>
+        {cert.valid_until && (
+          <p class="text-xs text-gray-500 mt-0.5">
+            {getTranslation(lang, 'cert_valid_until')}: {formatDate(cert.valid_until)}
+          </p>
+        )}
+      </div>
+    </li>
+  ))}
+</ul>

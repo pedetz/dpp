@@ -1,0 +1,22 @@
+{
+  "name": "passaporto",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:passport": "turbo run dev --filter=@passaporto/web",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "gen:types": "supabase gen types typescript --local > packages/shared/src/types/database.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.0.0"
+}

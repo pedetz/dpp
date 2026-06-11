@@ -1,0 +1,22 @@
+---
+interface Props {
+  value: number
+  label: string
+}
+
+const { value, label } = Astro.props
+const clamped = Math.min(100, Math.max(0, value))
+---
+
+<div>
+  <div class="flex justify-between text-sm mb-1">
+    <span class="text-gray-700">{label}</span>
+    <span class="font-medium text-gray-800">{value}%</span>
+  </div>
+  <div class="w-full bg-gray-100 rounded-full h-3">
+    <div
+      class="h-3 rounded-full bg-[#2d7a50]"
+      style={`width: ${clamped}%;`}
+    />
+  </div>
+</div>

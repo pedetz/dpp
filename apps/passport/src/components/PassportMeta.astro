@@ -1,0 +1,27 @@
+---
+import type { Lang } from '@/lib/i18n'
+import { getTranslation } from '@/lib/i18n'
+
+interface Props {
+  version: number
+  publishedAt: string
+  lang: Lang
+}
+
+const { version, publishedAt, lang } = Astro.props
+
+const formattedDate = new Intl.DateTimeFormat(lang === 'it' ? 'it-IT' : 'en-GB', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+}).format(new Date(publishedAt))
+---
+
+<div class="flex items-center gap-2 flex-wrap">
+  <span class="text-xs bg-gray-100 text-gray-600 rounded px-2 py-1">
+    {getTranslation(lang, 'version_label')} {version}
+  </span>
+  <span class="text-xs text-gray-500">
+    {getTranslation(lang, 'published_label')} {formattedDate}
+  </span>
+</div>

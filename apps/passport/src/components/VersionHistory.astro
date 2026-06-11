@@ -1,0 +1,41 @@
+---
+import type { Lang } from '@/lib/i18n'
+import type { VersionEntry } from '@/lib/passport'
+import { getTranslation } from '@/lib/i18n'
+
+interface Props {
+  versions: VersionEntry[]
+  lang: Lang
+}
+
+const { versions, lang } = Astro.props
+
+function formatDate(dateStr: string): string {
+  return new Intl.DateTimeFormat(lang === 'it' ? 'it-IT' : 'en-GB', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date(dateStr))
+}
+---
+
+{versions.length > 1 && (
+  <div class="max-w-2xl mx-auto px-4 mb-4">
+    <details class="bg-white rounded-xl shadow-md overflow-hidden">
+      <summary class="px-4 py-3 cursor-pointer text-sm font-medium text-gray-700 hover:bg-gray-50 list-none flex items-center justify-between">
+        <span>{getTranslation(lang, 'version_history')}</span>
+        <span class="text-xs bg-gray-100 text-gray-500 rounded px-2 py-0.5">{versions.length}</span>
+      </summary>
+      <ul class="border-t border-gray-100 divide-y divide-gray-100">
+        {versions.map((v) => (
+          <li class="px-4 py-3 flex items-center justify-between text-sm">
+            <span class="text-xs bg-gray-100 text-gray-600 rounded px-2 py-1 font-mono">
+              v{v.version}
+            </span>
+            <span class="text-gray-500 text-xs">{formatDate(v.published_at)}</span>
+          </li>
+        ))}
+      </ul>
+    </details>
+  </div>
+)}

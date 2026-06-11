@@ -1,0 +1,131 @@
+---
+import PassportLayout from '@/layouts/PassportLayout.astro'
+import BrandHeader from '@/components/BrandHeader.astro'
+import ProductGallery from '@/components/ProductGallery.astro'
+import PassportMeta from '@/components/PassportMeta.astro'
+import LanguageSwitch from '@/components/LanguageSwitch.astro'
+import VersionHistory from '@/components/VersionHistory.astro'
+import FieldSection from '@/components/sections/FieldSection.astro'
+import CompositionSection from '@/components/sections/CompositionSection.astro'
+import CountrySection from '@/components/sections/CountrySection.astro'
+import PercentSection from '@/components/sections/PercentSection.astro'
+import CareSection from '@/components/sections/CareSection.astro'
+import TextSection from '@/components/sections/TextSection.astro'
+import CertificationsSection from '@/components/sections/CertificationsSection.astro'
+import { getPassportBySlug, getVersionHistory } from '@/lib/passport'
+import { getLang, getTranslation } from '@/lib/i18n'
+
+export const prerender = false
+
+const { slug } = Astro.params
+const lang = getLang(Astro.url)
+
+if (!slug) {
+  return Astro.redirect('/404')
+}
+
+const passport = await getPassportBySlug(slug)
+
+if (!passport) {
+  return new Response(null, { status: 404, headers: { Location: '/404' } })
+}
+
+if (passport.gtin) {
+  const redirectUrl = `/01/${passport.gtin}?lang=${lang}`
+  return Astro.redirect(redirectUrl, 301)
+}
+
+const versions = await getVersionHistory(passport.slug)
+
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600')
+
+const d = passport.data
+const ogImage = passport.images?.[0] ?? undefined
+const title = `${passport.name} — ${passport.brand_name}`
+const description = `${getTranslation(lang, 'passport_title')} — ${passport.category}`
+---
+
+<PassportLayout
+  title={title}
+  description={description}
+  ogImage={ogImage}
+  brandName={passport.brand_name}
+  category={passport.category}
+  lang={lang}
+>
+  <div class="min-h-screen bg-gray-50">
+    <BrandHeader brandName={passport.brand_name} logoUrl={passport.logo_url} lang={lang} />
+
+    <div class="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">{passport.name}</h1>
+        <p class="text-sm text-gray-500 mt-0.5">{passport.category}</p>
+      </div>
+      <LanguageSwitch currentLang={lang} currentUrl={Astro.url} />
+    </div>
+
+    <div class="max-w-2xl mx-auto px-4 mb-4">
+      <PassportMeta version={passport.version} publishedAt={passport.published_at} lang={lang} />
+    </div>
+
+    <ProductGallery images={passport.images ?? []} name={passport.name} />
+
+    {d.composition && typeof d.composition === 'object' && !Array.isArray(d.composition) && (
+      <FieldSection title={getTranslation(lang, 'composition_title')}>
+        <CompositionSection data={d.composition as Record<string, number>} lang={lang} />
+      </FieldSection>
+    )}
+
+    {d.country_weaving && typeof d.country_weaving === 'string' && (
+      <FieldSection title={getTranslation(lang, 'country_weaving')}>
+        <CountrySection countryCode={d.country_weaving} lang={lang} />
+      </FieldSection>
+    )}
+
+    {d.country_manufacture && typeof d.country_manufacture === 'string' && (
+      <FieldSection title={getTranslation(lang, 'country_manufacture')}>
+        <CountrySection countryCode={d.country_manufacture} lang={lang} />
+      </FieldSection>
+    )}
+
+    {typeof d.recycled_content === 'number' && (
+      <FieldSection title={getTranslation(lang, 'recycled_content')}>
+        <PercentSection value={d.recycled_content} label={getTranslation(lang, 'recycled_content')} />
+      </FieldSection>
+    )}
+
+    {d.care_instructions && Array.isArray(d.care_instructions) && (
+      <FieldSection title={getTranslation(lang, 'care_instructions')}>
+        <CareSection symbols={d.care_instructions as string[]} lang={lang} />
+      </FieldSection>
+    )}
+
+    {d.end_of_life && typeof d.end_of_life === 'string' && (
+      <FieldSection title={getTranslation(lang, 'end_of_life')}>
+        <TextSection text={d.end_of_life} />
+      </FieldSection>
+    )}
+
+    {d.svhc_substances && typeof d.svhc_substances === 'string' && (
+      <FieldSection title={getTranslation(lang, 'svhc_substances')}>
+        <TextSection text={d.svhc_substances} />
+      </FieldSection>
+    )}
+
+    {d.durability && typeof d.durability === 'string' && (
+      <FieldSection title={getTranslation(lang, 'durability')}>
+        <TextSection text={d.durability} />
+      </FieldSection>
+    )}
+
+    {d.certifications && Array.isArray(d.certifications) && (
+      <FieldSection title={getTranslation(lang, 'certifications_title')}>
+        <CertificationsSection certifications={d.certifications as Array<{ type: string; valid_until?: string }>} lang={lang} />
+      </FieldSection>
+    )}
+
+    <VersionHistory versions={versions} lang={lang} />
+
+    <div class="pb-8" />
+  </div>
+</PassportLayout>

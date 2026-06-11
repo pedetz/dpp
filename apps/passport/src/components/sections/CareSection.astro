@@ -1,0 +1,41 @@
+---
+import type { Lang } from '@/lib/i18n'
+
+interface Props {
+  symbols: string[]
+  lang: Lang
+}
+
+const { symbols, lang } = Astro.props
+
+const careLabels: Record<string, { it: string; en: string; icon: string }> = {
+  lavabile_30: { it: 'Lavare a 30°C', en: 'Wash at 30°C', icon: '🫧' },
+  lavabile_40: { it: 'Lavare a 40°C', en: 'Wash at 40°C', icon: '🫧' },
+  lavabile_60: { it: 'Lavare a 60°C', en: 'Wash at 60°C', icon: '🫧' },
+  non_lavare: { it: 'Non lavare', en: 'Do not wash', icon: '🚫' },
+  lavaggio_delicato: { it: 'Lavaggio delicato', en: 'Delicate wash', icon: '🫧' },
+  asciugatrice_ok: { it: 'Asciugatrice consentita', en: 'Tumble dry allowed', icon: '🔄' },
+  non_asciugatrice: { it: 'Non usare asciugatrice', en: 'Do not tumble dry', icon: '🚫' },
+  stirare_bassa: { it: 'Stirare a bassa temperatura', en: 'Iron at low temperature', icon: '🔥' },
+  stirare_media: { it: 'Stirare a media temperatura', en: 'Iron at medium temperature', icon: '🔥' },
+  stirare_alta: { it: 'Stirare ad alta temperatura', en: 'Iron at high temperature', icon: '🔥' },
+  non_stirare: { it: 'Non stirare', en: 'Do not iron', icon: '🚫' },
+  pulizia_secco: { it: 'Pulizia a secco consentita', en: 'Dry cleaning allowed', icon: '✅' },
+  non_pulizia_secco: { it: 'Non lavare a secco', en: 'Do not dry clean', icon: '🚫' },
+  candeggio_ok: { it: 'Candeggio consentito', en: 'Bleaching allowed', icon: '✅' },
+  non_candeggio: { it: 'Non candeggiare', en: 'Do not bleach', icon: '🚫' },
+}
+---
+
+<ul class="space-y-2">
+  {symbols.map((sym) => {
+    const entry = careLabels[sym]
+    if (!entry) return null
+    return (
+      <li class="flex items-center gap-3 text-sm text-gray-700">
+        <span class="text-xl w-7 text-center" aria-hidden="true">{entry.icon}</span>
+        <span>{entry[lang]}</span>
+      </li>
+    )
+  })}
+</ul>

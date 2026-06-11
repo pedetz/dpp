@@ -1,0 +1,35 @@
+---
+interface Props {
+  brandName: string
+  logoUrl: string | null
+  lang: string
+}
+
+const { brandName, logoUrl, lang } = Astro.props
+---
+
+<header class="bg-[#1a4731] text-white px-4 py-4">
+  <div class="max-w-2xl mx-auto flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      {logoUrl && (
+        <img
+          src={logoUrl}
+          alt={brandName}
+          width="48"
+          height="48"
+          loading="lazy"
+          class="rounded-lg object-contain bg-white p-1"
+        />
+      )}
+      <div>
+        <p class="text-xs text-green-200 uppercase tracking-wide font-medium">
+          {lang === 'en' ? 'Manufacturer' : 'Produttore'}
+        </p>
+        <p class="text-lg font-bold leading-tight">{brandName}</p>
+      </div>
+    </div>
+    <span class="text-xs bg-[#2d7a50] text-white rounded-full px-3 py-1 font-medium whitespace-nowrap">
+      {lang === 'en' ? 'Digital Product Passport' : 'Passaporto Digitale'}
+    </span>
+  </div>
+</header>
