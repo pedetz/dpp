@@ -1,0 +1,42 @@
+---
+import type { Lang } from '@/lib/i18n'
+
+interface Props {
+  currentLang: Lang
+  currentUrl: URL
+}
+
+const { currentLang, currentUrl } = Astro.props
+
+function buildUrl(lang: Lang): string {
+  const url = new URL(currentUrl.toString())
+  url.searchParams.set('lang', lang)
+  return url.pathname + url.search
+}
+
+const itUrl = buildUrl('it')
+const enUrl = buildUrl('en')
+---
+
+<div class="flex items-center gap-1">
+  <a
+    href={itUrl}
+    class={`text-xs px-2 py-1 rounded border font-medium transition-colors ${
+      currentLang === 'it'
+        ? 'bg-[#1a4731] text-white border-[#1a4731]'
+        : 'bg-white text-gray-600 border-gray-300 hover:border-[#2d7a50] hover:text-[#2d7a50]'
+    }`}
+  >
+    IT
+  </a>
+  <a
+    href={enUrl}
+    class={`text-xs px-2 py-1 rounded border font-medium transition-colors ${
+      currentLang === 'en'
+        ? 'bg-[#1a4731] text-white border-[#1a4731]'
+        : 'bg-white text-gray-600 border-gray-300 hover:border-[#2d7a50] hover:text-[#2d7a50]'
+    }`}
+  >
+    EN
+  </a>
+</div>

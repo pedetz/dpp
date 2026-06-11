@@ -1,0 +1,43 @@
+---
+interface Props {
+  images: string[]
+  name: string
+}
+
+const { images, name } = Astro.props
+const validImages = images.filter(Boolean)
+---
+
+{validImages.length > 0 && (
+  <div class="max-w-2xl mx-auto px-4 py-4">
+    {validImages.length === 1 ? (
+      <div class="rounded-xl overflow-hidden bg-white shadow-md">
+        <img
+          src={validImages[0]}
+          alt={name}
+          width="800"
+          height="600"
+          loading="lazy"
+          class="w-full object-cover"
+          style="aspect-ratio: 4/3;"
+        />
+      </div>
+    ) : (
+      <div class="grid grid-cols-2 gap-3">
+        {validImages.slice(0, 4).map((src, i) => (
+          <div class="rounded-xl overflow-hidden bg-white shadow-md">
+            <img
+              src={src}
+              alt={`${name} ${i + 1}`}
+              width="400"
+              height="300"
+              loading="lazy"
+              class="w-full object-cover"
+              style="aspect-ratio: 4/3;"
+            />
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
