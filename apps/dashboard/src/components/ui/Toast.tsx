@@ -1,77 +1,85 @@
-import { useEffect, useState, createContext, useContext, useCallback } from 'react'
-import { CheckCircle, XCircle, Info, X } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
+import type { ReactNode } from "react";
+import { CheckCircle, AlertCircle, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-type ToastType = 'success' | 'error' | 'info'
+type ToastKind = "success" | "error";
 
 interface ToastItem {
-  id: number
-  type: ToastType
-  message: string
+  id: number;
+  kind: ToastKind;
+  message: string;
 }
 
 interface ToastContextValue {
-  toast: (message: string, type?: ToastType) => void
+  success: (message: string) => void;
+  error: (message: string) => void;
 }
 
-const ToastContext = createContext<ToastContextValue>({ toast: () => {} })
+const ToastContext = createContext<ToastContextValue | null>(null);
 
-let nextId = 0
+export function ToastProvider({ children }: { children: ReactNode }) {
+  const [items, setItems] = useState<ToastItem[]>([]);
 
-export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<ToastItem[]>([])
+  const remove = useCallback((id: number) => {
+    setItems((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
-  const toast = useCallback((message: string, type: ToastType = 'info') => {
-    const id = ++nextId
-    setItems((prev) => [...prev, { id, type, message }])
-    setTimeout(() => {
-      setItems((prev) => prev.filter((t) => t.id !== id))
-    }, 4000)
-  }, [])
+  const push = useCallback(
+    (kind: ToastKind, message: string) => {
+      const id = Date.now() + Math.random();
+      setItems((prev) => [...prev, { id, kind, message }]);
+      window.setTimeout(() => remove(id), 4000);
+    },
+    [remove],
+  );
 
-  const dismiss = (id: number) => setItems((prev) => prev.filter((t) => t.id !== id))
+  const value = useMemo<ToastContextValue>(
+    () => ({
+      success: (message: string) => push("success", message),
+      error: (message: string) => push("error", message),
+    }),
+    [push],
+  );
 
   return (
-    <ToastContext.Provider value={{ toast }}>
+    <ToastContext.Provider value={value}>
       {children}
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+      <div className="fixed bottom-4 right-4 z-[60] flex flex-col gap-2">
         {items.map((item) => (
-          <ToastItem key={item.id} item={item} onDismiss={() => dismiss(item.id)} />
+          <div
+            key={item.id}
+            className={cn(
+              "flex items-center gap-2 rounded-lg px-4 py-3 text-sm shadow-lg",
+              item.kind === "success"
+                ? "bg-green-600 text-white"
+                : "bg-red-600 text-white",
+            )}
+          >
+            {item.kind === "success" ? (
+              <CheckCircle className="h-4 w-4" />
+            ) : (
+              <AlertCircle className="h-4 w-4" />
+            )}
+            <span>{item.message}</span>
+            <button onClick={() => remove(item.id)} aria-label="Close">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         ))}
       </div>
     </ToastContext.Provider>
-  )
+  );
 }
 
-function ToastItem({ item, onDismiss }: { item: ToastItem; onDismiss: () => void }) {
-  const icons: Record<ToastType, React.ReactNode> = {
-    success: <CheckCircle className="h-5 w-5 text-green-500" />,
-    error: <XCircle className="h-5 w-5 text-red-500" />,
-    info: <Info className="h-5 w-5 text-blue-500" />,
-  }
-
-  const bgClasses: Record<ToastType, string> = {
-    success: 'border-green-200 bg-green-50',
-    error: 'border-red-200 bg-red-50',
-    info: 'border-blue-200 bg-blue-50',
-  }
-
-  return (
-    <div
-      className={cn(
-        'flex items-start gap-3 rounded-lg border px-4 py-3 shadow-md min-w-72 max-w-sm',
-        bgClasses[item.type],
-      )}
-    >
-      {icons[item.type]}
-      <p className="flex-1 text-sm text-gray-800">{item.message}</p>
-      <button onClick={onDismiss} className="text-gray-400 hover:text-gray-600">
-        <X className="h-4 w-4" />
-      </button>
-    </div>
-  )
-}
-
-export function useToast() {
-  return useContext(ToastContext)
+export function useToast(): ToastContextValue {
+  const ctx = useContext(ToastContext);
+  if (!ctx) throw new Error("useToast must be used within ToastProvider");
+  return ctx;
 }

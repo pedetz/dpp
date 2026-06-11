@@ -1,79 +1,78 @@
-import { Plus, Trash2 } from 'lucide-react'
-import type { FiberEntry } from '@passaporto/shared'
-import { Button } from '@/components/ui/Button'
-import { Select } from '@/components/ui/Select'
-import { Input } from '@/components/ui/Input'
-
-const COMMON_FIBERS = [
-  'Cotone', 'Lino', 'Lana', 'Seta', 'Poliestere',
-  'Nylon', 'Viscosa', 'Cashmere', 'Elastan',
-]
+import { Plus, Trash2 } from "lucide-react";
+import type { FiberEntry } from "@passaporto/shared";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
+import { t } from "@/i18n";
 
 interface CompositionFieldProps {
-  value: FiberEntry[]
-  onChange: (v: FiberEntry[]) => void
-  error?: string
+  value: FiberEntry[];
+  onChange: (value: FiberEntry[]) => void;
 }
 
-export function CompositionField({ value, onChange, error }: CompositionFieldProps) {
-  const total = value.reduce((sum, e) => sum + (e.percent || 0), 0)
+export function CompositionField({ value, onChange }: CompositionFieldProps) {
+  const sum = value.reduce((acc, entry) => acc + (Number(entry.percent) || 0), 0);
+  const valid = sum === 100;
 
-  const add = () => onChange([...value, { fiber: COMMON_FIBERS[0], percent: 0 }])
+  const update = (index: number, patch: Partial<FiberEntry>) => {
+    onChange(value.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)));
+  };
 
-  const update = (i: number, patch: Partial<FiberEntry>) => {
-    const next = value.map((e, idx) => (idx === i ? { ...e, ...patch } : e))
-    onChange(next)
-  }
+  const remove = (index: number) => {
+    onChange(value.filter((_, i) => i !== index));
+  };
 
-  const remove = (i: number) => onChange(value.filter((_, idx) => idx !== i))
-
-  const fiberOptions = COMMON_FIBERS.map((f) => ({ value: f, label: f }))
+  const add = () => {
+    onChange([...value, { fiber: "", percent: 0 }]);
+  };
 
   return (
-    <div className="space-y-2">
-      {value.map((entry, i) => (
-        <div key={i} className="flex items-end gap-2">
-          <div className="flex-1">
-            <Select
-              options={fiberOptions}
-              value={entry.fiber}
-              onChange={(e) => update(i, { fiber: e.target.value })}
-            />
-          </div>
-          <div className="w-28">
-            <Input
-              type="number"
-              min={0}
-              max={100}
-              value={entry.percent}
-              onChange={(e) => update(i, { percent: Number(e.target.value) })}
-              placeholder="%"
-            />
-          </div>
-          <button
+    <div className="flex flex-col gap-2">
+      {value.map((entry, index) => (
+        <div key={index} className="flex items-end gap-2">
+          <Input
+            className="flex-1"
+            placeholder={t("fields.fiber")}
+            value={entry.fiber}
+            onChange={(e) => update(index, { fiber: e.target.value })}
+          />
+          <Input
+            type="number"
+            min={0}
+            max={100}
+            className="w-24"
+            placeholder={t("fields.percent")}
+            value={entry.percent}
+            onChange={(e) => update(index, { percent: Number(e.target.value) })}
+          />
+          <Button
             type="button"
-            onClick={() => remove(i)}
-            className="mb-0.5 rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+            variant="ghost"
+            size="sm"
+            onClick={() => remove(index)}
+            aria-label={t("common.remove")}
           >
             <Trash2 className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       ))}
-
       <div className="flex items-center justify-between">
-        <Button type="button" variant="ghost" size="sm" onClick={add}>
+        <Button type="button" variant="secondary" size="sm" onClick={add}>
           <Plus className="h-4 w-4" />
-          Aggiungi fibra
+          {t("fields.addFiber")}
         </Button>
-        <span className={`text-sm font-medium ${total === 100 ? 'text-green-600' : 'text-red-600'}`}>
-          Totale: {total}%
+        <span
+          className={cn(
+            "text-sm font-medium",
+            valid ? "text-green-600" : "text-red-600",
+          )}
+        >
+          {valid ? t("fields.fiberSumOk") : t("fields.fiberSum", { sum })}
         </span>
       </div>
-
-      {error && <p className="text-xs text-red-600">{error}</p>}
-      {total !== 100 && value.length > 0 && (
-        <p className="text-xs text-amber-600">La somma deve essere 100%</p>
-      )}
+      {!valid ? (
+        <span className="text-xs text-red-600">{t("fields.fiberSumError")}</span>
+      ) : null}
     </div>
-  )
+  );
 }

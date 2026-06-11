@@ -1,32 +1,28 @@
-import { Input } from '@/components/ui/Input'
-
 interface PercentFieldProps {
-  label?: string
-  value: number
-  onChange: (v: number) => void
-  error?: string
+  value: number;
+  onChange: (value: number) => void;
 }
 
-export function PercentField({ label, value, onChange, error }: PercentFieldProps) {
-  const clamped = Math.max(0, Math.min(100, value || 0))
-
+export function PercentField({ value, onChange }: PercentFieldProps) {
+  const safe = Number.isFinite(value) ? value : 0;
   return (
-    <div className="space-y-2">
-      <Input
-        label={label}
+    <div className="flex items-center gap-4">
+      <input
+        type="range"
+        min={0}
+        max={100}
+        value={safe}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="flex-1 accent-brand-600"
+      />
+      <input
         type="number"
         min={0}
         max={100}
-        value={value}
+        value={safe}
         onChange={(e) => onChange(Number(e.target.value))}
-        error={error}
+        className="w-20 rounded-lg border-gray-300 text-sm shadow-sm focus:border-brand-500 focus:ring-brand-500"
       />
-      <div className="h-2 w-full rounded-full bg-gray-200 overflow-hidden">
-        <div
-          className="h-2 rounded-full bg-green-500 transition-all"
-          style={{ width: `${clamped}%` }}
-        />
-      </div>
     </div>
-  )
+  );
 }

@@ -2,6 +2,7 @@ declare module "@passaporto/shared" {
   export type Plan = "trial" | "starter" | "pro" | "filiera";
   export type ProductStatus = "draft" | "published" | "archived";
   export type MemberRole = "owner" | "editor" | "viewer";
+  export type Role = MemberRole;
   export type SubscriptionStatus =
     | "active"
     | "trialing"

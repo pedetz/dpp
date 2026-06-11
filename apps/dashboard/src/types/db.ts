@@ -9,10 +9,13 @@ import type {
   TemplateField,
 } from "@passaporto/shared";
 
+type Indexed<T> = { [K in keyof T]: T[K] };
+
 interface Table<Row, Insert, Update> {
-  Row: Row;
-  Insert: Insert;
-  Update: Update;
+  Row: Indexed<Row>;
+  Insert: Indexed<Insert>;
+  Update: Indexed<Update>;
+  Relationships: [];
 }
 
 export interface Database {
@@ -49,9 +52,10 @@ export interface Database {
       >;
     };
     Views: {
-      public_passports: { Row: PublicPassport };
+      public_passports: { Row: Indexed<PublicPassport>; Relationships: [] };
     };
     Functions: Record<string, never>;
     Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 }

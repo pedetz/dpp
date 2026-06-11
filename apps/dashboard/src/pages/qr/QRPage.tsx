@@ -1,49 +1,59 @@
-import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { useProducts } from '@/hooks/useProducts'
-import { PageHeader } from '@/components/layout/PageHeader'
-import { Card } from '@/components/ui/Card'
-import { Select } from '@/components/ui/Select'
-import { QRCodeDisplay } from '@/components/qr/QRCode'
-import { QRDownload } from '@/components/qr/QRDownload'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { QrCode } from 'lucide-react'
-import t from '@/i18n/it.json'
+import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Card, CardBody } from "@/components/ui/Card";
+import { Select } from "@/components/ui/Select";
+import { Spinner } from "@/components/ui/Spinner";
+import { QRCode } from "@/components/qr/QRCode";
+import { QRDownload } from "@/components/qr/QRDownload";
+import { useOrg } from "@/hooks/useOrg";
+import { useProducts } from "@/hooks/useProducts";
+import { passportUrl } from "@/lib/passportUrl";
+import { t } from "@/i18n";
 
-export default function QRPage() {
-  const [searchParams] = useSearchParams()
-  const [selectedId, setSelectedId] = useState(searchParams.get('product') ?? '')
-  const { data: products } = useProducts({ status: 'published' })
+export function QRPage() {
+  const { orgId } = useOrg();
+  const { data, isLoading } = useProducts(orgId);
+  const [params] = useSearchParams();
+  const [selected, setSelected] = useState(params.get("product") ?? "");
 
-  const options = (products ?? []).map((p) => ({ value: p.id, label: p.name }))
-  const product = (products ?? []).find((p) => p.id === selectedId)
+  const product = useMemo(
+    () => data?.find((p) => p.id === selected) ?? null,
+    [data, selected],
+  );
 
   return (
     <div>
-      <PageHeader title={t.qr_title} />
-
-      <Card className="max-w-lg space-y-6">
-        <Select
-          label={t.labels_select}
-          options={options}
-          value={selectedId}
-          onChange={(e) => setSelectedId(e.target.value)}
-          placeholder="Seleziona prodotto pubblicato"
-        />
-
-        {product ? (
-          <div className="flex flex-col items-center gap-4">
-            <QRCodeDisplay product={product} />
-            <QRDownload product={product} />
-          </div>
-        ) : (
-          <EmptyState
-            icon={<QrCode className="h-10 w-10" />}
-            title="Seleziona un prodotto"
-            description="Scegli un prodotto pubblicato per generare il QR Code."
-          />
-        )}
-      </Card>
+      <PageHeader title={t("qr.title")} subtitle={t("qr.subtitle")} />
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Spinner />
+        </div>
+      ) : (
+        <Card className="max-w-lg">
+          <CardBody className="flex flex-col items-center gap-5">
+            <Select
+              className="w-full"
+              placeholder={t("qr.selectProduct")}
+              value={selected}
+              onChange={(e) => setSelected(e.target.value)}
+              options={(data ?? []).map((p) => ({ value: p.id, label: p.name }))}
+            />
+            {product ? (
+              <>
+                <QRCode value={passportUrl(product)} />
+                <div className="w-full break-all rounded-lg bg-gray-50 p-3 text-center text-xs text-gray-500">
+                  <p className="mb-1 font-medium text-gray-700">
+                    {product.gtin ? t("qr.withGtin") : t("qr.noGtin")}
+                  </p>
+                  {passportUrl(product)}
+                </div>
+                <QRDownload value={passportUrl(product)} filename={product.slug} />
+              </>
+            ) : null}
+          </CardBody>
+        </Card>
+      )}
     </div>
-  )
+  );
 }

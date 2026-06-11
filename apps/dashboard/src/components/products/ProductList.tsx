@@ -1,182 +1,118 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Edit, QrCode } from 'lucide-react'
-import type { Product, ProductStatus } from '@passaporto/shared'
-import { useProducts } from '@/hooks/useProducts'
-import { useTemplates } from '@/hooks/useTemplates'
-import { completeness } from '@/lib/conformity'
-import { Table } from '@/components/ui/Table'
-import { Badge } from '@/components/ui/Badge'
-import { Input } from '@/components/ui/Input'
-import { Select } from '@/components/ui/Select'
-import { Button } from '@/components/ui/Button'
-import { EmptyState } from '@/components/ui/EmptyState'
-import t from '@/i18n/it.json'
-import { Package } from 'lucide-react'
+import { useMemo, useState } from "react";
+import { Package } from "lucide-react";
+import type { Product, ProductStatus as Status } from "@passaporto/shared";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ProductCard } from "./ProductCard";
+import { t } from "@/i18n";
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 12;
 
-const statusOptions = [
-  { value: '', label: 'Tutti gli stati' },
-  { value: 'draft', label: t.status_draft },
-  { value: 'published', label: t.status_published },
-  { value: 'archived', label: t.status_archived },
-]
-
-function StatusBadge({ status }: { status: ProductStatus }) {
-  const labels: Record<ProductStatus, string> = {
-    draft: t.status_draft,
-    published: t.status_published,
-    archived: t.status_archived,
-  }
-  return <Badge variant={status}>{labels[status]}</Badge>
+interface ProductListProps {
+  products: Product[];
 }
 
-function CompletenessCell({ product }: { product: Product }) {
-  const { data: fields } = useTemplates(product.category)
-  const pct = fields ? completeness(fields, product.data) : 0
+export function ProductList({ products }: ProductListProps) {
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<Status | "">("");
+  const [category, setCategory] = useState("");
+  const [page, setPage] = useState(0);
+
+  const categories = useMemo(
+    () => Array.from(new Set(products.map((p) => p.category))),
+    [products],
+  );
+
+  const filtered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return products.filter((product) => {
+      if (status && product.status !== status) return false;
+      if (category && product.category !== category) return false;
+      if (!term) return true;
+      const haystack = `${product.name} ${product.sku ?? ""} ${product.gtin ?? ""}`.toLowerCase();
+      return haystack.includes(term);
+    });
+  }, [products, search, status, category]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const current = Math.min(page, pageCount - 1);
+  const visible = filtered.slice(current * PAGE_SIZE, current * PAGE_SIZE + PAGE_SIZE);
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="h-1.5 w-16 rounded-full bg-gray-200 overflow-hidden">
-        <div
-          className="h-1.5 rounded-full bg-green-500 transition-all"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <span className="text-xs text-gray-500">{pct}%</span>
-    </div>
-  )
-}
-
-export function ProductList() {
-  const navigate = useNavigate()
-  const [search, setSearch] = useState('')
-  const [status, setStatus] = useState<ProductStatus | ''>('')
-  const [page, setPage] = useState(0)
-
-  const { data: products, isLoading } = useProducts({
-    status: status || undefined,
-    search: search || undefined,
-  })
-
-  const paged = (products ?? []).slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
-  const totalPages = Math.ceil((products?.length ?? 0) / PAGE_SIZE)
-
-  const columns = [
-    {
-      key: 'name',
-      header: t.product_name,
-      render: (p: Product) => (
-        <span className="font-medium text-gray-900">{p.name}</span>
-      ),
-    },
-    {
-      key: 'sku',
-      header: t.product_sku,
-      render: (p: Product) => <span className="text-gray-500">{p.sku ?? '-'}</span>,
-    },
-    {
-      key: 'category',
-      header: t.product_category,
-      render: (p: Product) => <span className="capitalize text-gray-600">{p.category}</span>,
-    },
-    {
-      key: 'status',
-      header: 'Stato',
-      render: (p: Product) => <StatusBadge status={p.status} />,
-    },
-    {
-      key: 'completeness',
-      header: 'Completezza',
-      render: (p: Product) => <CompletenessCell product={p} />,
-    },
-    {
-      key: 'actions',
-      header: '',
-      render: (p: Product) => (
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => navigate(`/products/${p.id}`)}
-            className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
-            title="Modifica"
-          >
-            <Edit className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => navigate(`/qr?product=${p.id}`)}
-            className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
-            title="QR Code"
-          >
-            <QrCode className="h-4 w-4" />
-          </button>
-        </div>
-      ),
-    },
-  ]
-
-  if (!isLoading && (products ?? []).length === 0 && !search && !status) {
-    return (
-      <EmptyState
-        icon={<Package className="h-12 w-12" />}
-        title="Nessun prodotto ancora"
-        description="Crea il tuo primo prodotto digitale."
-        action={
-          <Button onClick={() => navigate('/products/new')}>{t.btn_new_product}</Button>
-        }
-      />
-    )
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="flex gap-3">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap gap-3">
         <Input
-          placeholder="Cerca per nome..."
+          className="min-w-[16rem] flex-1"
+          placeholder={t("products.searchPlaceholder")}
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(0) }}
-          className="max-w-xs"
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(0);
+          }}
         />
         <Select
-          options={statusOptions}
+          placeholder={t("common.all")}
           value={status}
-          onChange={(e) => { setStatus(e.target.value as ProductStatus | ''); setPage(0) }}
-          className="w-44"
+          onChange={(e) => {
+            setStatus(e.target.value as Status | "");
+            setPage(0);
+          }}
+          options={[
+            { value: "draft", label: t("status.draft") },
+            { value: "published", label: t("status.published") },
+            { value: "archived", label: t("status.archived") },
+          ]}
+        />
+        <Select
+          placeholder={t("common.all")}
+          value={category}
+          onChange={(e) => {
+            setCategory(e.target.value);
+            setPage(0);
+          }}
+          options={categories.map((c) => ({ value: c, label: c }))}
         />
       </div>
 
-      <Table
-        columns={columns}
-        data={paged}
-        loading={isLoading}
-        keyExtractor={(p) => p.id}
-      />
-
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">
-            Pagina {page + 1} di {totalPages}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={page === 0}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              Precedente
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={page >= totalPages - 1}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Successiva
-            </Button>
-          </div>
+      {visible.length === 0 ? (
+        <EmptyState
+          icon={Package}
+          title={products.length === 0 ? t("products.empty") : t("products.emptyFiltered")}
+          description={products.length === 0 ? t("products.emptyDescription") : undefined}
+        />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {visible.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
         </div>
       )}
+
+      {pageCount > 1 ? (
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={current === 0}
+            onClick={() => setPage(current - 1)}
+          >
+            {t("common.back")}
+          </Button>
+          <span className="text-sm text-gray-500">
+            {current + 1} / {pageCount}
+          </span>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={current >= pageCount - 1}
+            onClick={() => setPage(current + 1)}
+          >
+            {t("common.next")}
+          </Button>
+        </div>
+      ) : null}
     </div>
-  )
+  );
 }

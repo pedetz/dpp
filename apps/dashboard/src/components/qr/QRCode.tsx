@@ -1,21 +1,22 @@
-import { QRCodeSVG } from 'qrcode.react'
-import type { Product } from '@passaporto/shared'
+import { useEffect, useRef } from "react";
+import QRCodeStyling from "qrcode";
 
-interface QRCodeDisplayProps {
-  product: Product
+interface QRCodeProps {
+  value: string;
+  size?: number;
 }
 
-const PUBLIC_APP_URL = import.meta.env.VITE_PUBLIC_APP_URL ?? window.location.origin
+export function QRCode({ value, size = 220 }: QRCodeProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-export function QRCodeDisplay({ product }: QRCodeDisplayProps) {
-  const url = product.gtin
-    ? `${PUBLIC_APP_URL}/01/${product.gtin}`
-    : `${PUBLIC_APP_URL}/p/${product.slug}`
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    void QRCodeStyling.toCanvas(canvasRef.current, value, {
+      width: size,
+      margin: 1,
+      errorCorrectionLevel: "M",
+    });
+  }, [value, size]);
 
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <QRCodeSVG value={url} size={200} level="M" includeMargin />
-      <p className="text-xs text-gray-500 break-all max-w-xs text-center">{url}</p>
-    </div>
-  )
+  return <canvas ref={canvasRef} width={size} height={size} />;
 }

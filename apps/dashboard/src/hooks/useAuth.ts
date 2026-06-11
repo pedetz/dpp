@@ -1,42 +1,49 @@
-import { useEffect, useState } from 'react'
-import type { Session } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase'
+import { useEffect, useState, useCallback } from "react";
+import type { Session, User } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 
-interface UseAuthReturn {
-  session: Session | null
-  loading: boolean
-  signIn: (email: string) => Promise<void>
-  signOut: () => Promise<void>
+interface AuthState {
+  session: Session | null;
+  user: User | null;
+  loading: boolean;
+  signIn: (email: string) => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
-export function useAuth(): UseAuthReturn {
-  const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
+export function useAuth(): AuthState {
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-      setLoading(false)
-    })
+      setSession(data.session);
+      setLoading(false);
+    });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s)
-      setLoading(false)
-    })
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+      setSession(next);
+    });
 
-    return () => listener.subscription.unsubscribe()
-  }, [])
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
-  async function signIn(email: string): Promise<void> {
-    await supabase.auth.signInWithOtp({
+  const signIn = useCallback(async (email: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: `${window.location.origin}/` },
-    })
-  }
+    });
+    if (error) throw error;
+  }, []);
 
-  async function signOut(): Promise<void> {
-    await supabase.auth.signOut()
-  }
+  const signOut = useCallback(async () => {
+    await supabase.auth.signOut();
+  }, []);
 
-  return { session, loading, signIn, signOut }
+  return {
+    session,
+    user: session?.user ?? null,
+    loading,
+    signIn,
+    signOut,
+  };
 }

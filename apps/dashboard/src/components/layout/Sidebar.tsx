@@ -1,63 +1,51 @@
-import { NavLink } from 'react-router-dom'
-import { Package, QrCode, Tag, Settings, CreditCard } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { Badge } from '@/components/ui/Badge'
-import { useOrg } from '@/hooks/useOrg'
-import t from '@/i18n/it.json'
-import type { Plan } from '@passaporto/shared'
+import { NavLink } from "react-router-dom";
+import { Package, QrCode, Settings, CreditCard } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { t } from "@/i18n";
 
-const navItems = [
-  { to: '/products', label: t.nav_products, icon: Package },
-  { to: '/qr', label: t.nav_qr, icon: QrCode },
-  { to: '/labels', label: t.nav_labels, icon: Tag },
-  { to: '/settings', label: t.nav_settings, icon: Settings },
-  { to: '/settings/billing', label: t.nav_billing, icon: CreditCard },
-]
-
-const planLabelMap: Record<Plan, string> = {
-  trial: t.plan_trial,
-  starter: t.plan_starter,
-  pro: t.plan_pro,
-  filiera: t.plan_filiera,
+interface NavItem {
+  to: string;
+  label: string;
+  icon: LucideIcon;
 }
 
+const items: NavItem[] = [
+  { to: "/products", label: t("nav.products"), icon: Package },
+  { to: "/qr", label: t("nav.qr"), icon: QrCode },
+  { to: "/settings", label: t("nav.settings"), icon: Settings },
+  { to: "/settings/billing", label: t("nav.billing"), icon: CreditCard },
+];
+
 export function Sidebar() {
-  const { org } = useOrg()
-
   return (
-    <aside className="flex h-full w-64 flex-col border-r border-gray-200 bg-white">
-      <div className="flex h-16 items-center px-6 border-b border-gray-100">
-        <span className="text-lg font-bold text-green-700">Passaporto</span>
+    <aside className="hidden w-60 shrink-0 border-r border-gray-200 bg-white p-4 md:block">
+      <div className="mb-6 flex items-center gap-2 px-2">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">
+          P
+        </div>
+        <span className="text-lg font-semibold text-gray-900">{t("app.name")}</span>
       </div>
-
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-        {navItems.map(({ to, label, icon: Icon }) => (
+      <nav className="flex flex-col gap-1">
+        {items.map((item) => (
           <NavLink
-            key={to}
-            to={to}
+            key={item.to}
+            to={item.to}
+            end={item.to === "/settings"}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium",
                 isActive
-                  ? 'bg-green-50 text-green-700'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
+                  ? "bg-brand-50 text-brand-700"
+                  : "text-gray-600 hover:bg-gray-50",
               )
             }
           >
-            <Icon className="h-4 w-4 shrink-0" />
-            {label}
+            <item.icon className="h-4 w-4" />
+            {item.label}
           </NavLink>
         ))}
       </nav>
-
-      {org && (
-        <div className="border-t border-gray-100 px-4 py-3">
-          <div className="flex items-center gap-2">
-            <Badge variant={org.plan as Plan}>{planLabelMap[org.plan]}</Badge>
-            <span className="truncate text-xs text-gray-500">{org.name}</span>
-          </div>
-        </div>
-      )}
     </aside>
-  )
+  );
 }

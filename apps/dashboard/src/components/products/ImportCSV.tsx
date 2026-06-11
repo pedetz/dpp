@@ -1,197 +1,200 @@
-import { useState, useRef } from 'react'
-import { Upload, CheckCircle } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Select } from '@/components/ui/Select'
-import { useProducts } from '@/hooks/useProducts'
-import { slugify } from '@/lib/utils'
-import t from '@/i18n/it.json'
+import { useMemo, useState } from "react";
+import { FileSpreadsheet } from "lucide-react";
+import type { ProductData, TemplateField } from "@passaporto/shared";
+import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
+import { FileUpload } from "@/components/ui/FileUpload";
+import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/Table";
+import { Badge } from "@/components/ui/Badge";
+import { parseCsv } from "@/lib/csv";
+import type { ParsedCsv } from "@/lib/csv";
+import type { NewProductInput } from "@/hooks/useProducts";
+import { t } from "@/i18n";
 
-type Step = 'upload' | 'mapping' | 'preview' | 'import'
+type Step = "upload" | "map" | "preview" | "result";
+
+interface TargetOption {
+  value: string;
+  label: string;
+}
+
+interface ImportResult {
+  imported: number;
+  errors: { row: number; message: string }[];
+}
 
 interface ImportCSVProps {
-  onDone?: () => void
+  fields: TemplateField[];
+  category: string;
+  onImport: (rows: NewProductInput[]) => Promise<void>;
 }
 
-const SYSTEM_COLUMNS = [
-  { value: '', label: 'Non importare' },
-  { value: 'name', label: t.product_name },
-  { value: 'sku', label: t.product_sku },
-  { value: 'gtin', label: t.product_gtin },
-]
+const baseTargets: TargetOption[] = [
+  { value: "name", label: "name" },
+  { value: "sku", label: "sku" },
+  { value: "gtin", label: "gtin" },
+];
 
-function parseCsv(text: string): string[][] {
-  return text.trim().split('\n').map((line) =>
-    line.split(',').map((cell) => cell.trim().replace(/^"|"$/g, ''))
-  )
-}
+export function ImportCSV({ fields, category, onImport }: ImportCSVProps) {
+  const [step, setStep] = useState<Step>("upload");
+  const [parsed, setParsed] = useState<ParsedCsv | null>(null);
+  const [mapping, setMapping] = useState<Record<number, string>>({});
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<ImportResult | null>(null);
 
-export function ImportCSV({ onDone }: ImportCSVProps) {
-  const [step, setStep] = useState<Step>('upload')
-  const [headers, setHeaders] = useState<string[]>([])
-  const [rows, setRows] = useState<string[][]>([])
-  const [mapping, setMapping] = useState<Record<string, string>>({})
-  const [progress, setProgress] = useState(0)
-  const [errors, setErrors] = useState<Array<{ row: number; message: string }>>([])
-  const [done, setDone] = useState(false)
-  const fileRef = useRef<HTMLInputElement>(null)
+  const targets = useMemo<TargetOption[]>(
+    () => [...baseTargets, ...fields.map((f) => ({ value: f.key, label: f.label_it }))],
+    [fields],
+  );
 
-  const { create } = useProducts()
+  const handleFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const csv = parseCsv(String(reader.result));
+      setParsed(csv);
+      setMapping({});
+      setStep("map");
+    };
+    reader.readAsText(file);
+  };
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      const text = ev.target?.result as string
-      const parsed = parseCsv(text)
-      if (parsed.length < 2) return
-      setHeaders(parsed[0])
-      setRows(parsed.slice(1))
-      setMapping(Object.fromEntries(parsed[0].map((h) => [h, ''])))
-      setStep('mapping')
-    }
-    reader.readAsText(file)
-  }
+  const buildRows = (): NewProductInput[] => {
+    if (!parsed) return [];
+    return parsed.rows.map((row) => {
+      const data: ProductData = {};
+      let name = "";
+      let sku: string | null = null;
+      let gtin: string | null = null;
+      Object.entries(mapping).forEach(([index, target]) => {
+        const cell = row[Number(index)] ?? "";
+        if (target === "name") name = cell;
+        else if (target === "sku") sku = cell || null;
+        else if (target === "gtin") gtin = cell || null;
+        else if (target) data[target] = cell;
+      });
+      return { name, sku, gtin, category, data, images: [] };
+    });
+  };
 
-  const handleImport = async () => {
-    setStep('import')
-    const errs: Array<{ row: number; message: string }> = []
-    const nameKey = Object.entries(mapping).find(([, v]) => v === 'name')?.[0]
-    const skuKey = Object.entries(mapping).find(([, v]) => v === 'sku')?.[0]
-    const gtinKey = Object.entries(mapping).find(([, v]) => v === 'gtin')?.[0]
+  const validateRow = (input: NewProductInput): string | null => {
+    if (!input.name) return t("csv.errorRequired", { field: "name" });
+    return null;
+  };
 
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i]
-      const getValue = (key: string | undefined) =>
-        key ? row[headers.indexOf(key)] ?? '' : ''
-
-      const name = getValue(nameKey)
-      if (!name) {
-        errs.push({ row: i + 2, message: 'Nome mancante' })
-        setProgress(Math.round(((i + 1) / rows.length) * 100))
-        continue
+  const runImport = async () => {
+    const rows = buildRows();
+    const errors: { row: number; message: string }[] = [];
+    const valid: NewProductInput[] = [];
+    rows.forEach((row, index) => {
+      const error = validateRow(row);
+      if (error) {
+        errors.push({ row: index + 2, message: error });
+        return;
       }
-
-      try {
-        await create.mutateAsync({
-          name,
-          sku: getValue(skuKey) || undefined,
-          gtin: getValue(gtinKey) || undefined,
-          category: 'tessile',
-        })
-      } catch {
-        errs.push({ row: i + 2, message: `Errore importazione riga ${i + 2}` })
-      }
-
-      setProgress(Math.round(((i + 1) / rows.length) * 100))
+      valid.push(row);
+    });
+    setBusy(true);
+    try {
+      if (valid.length > 0) await onImport(valid);
+      setResult({ imported: valid.length, errors });
+      setStep("result");
+    } finally {
+      setBusy(false);
     }
+  };
 
-    setErrors(errs)
-    setDone(true)
+  if (step === "upload") {
+    return (
+      <FileUpload accept=".csv,text/csv" label={t("csv.selectFile")} onSelect={handleFile} />
+    );
   }
 
-  if (step === 'upload') {
+  if (step === "map" && parsed) {
     return (
-      <div className="space-y-4">
-        <h3 className="font-medium text-gray-900">{t.csv_upload}</h3>
-        <label className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-gray-300 p-12 cursor-pointer hover:border-green-400 transition-colors">
-          <Upload className="h-8 w-8 text-gray-400" />
-          <span className="text-sm text-gray-600">Trascina o clicca per caricare un file CSV</span>
-          <input ref={fileRef} type="file" accept=".csv" className="sr-only" onChange={handleFile} />
-        </label>
-      </div>
-    )
-  }
-
-  if (step === 'mapping') {
-    return (
-      <div className="space-y-4">
-        <h3 className="font-medium text-gray-900">{t.csv_mapping}</h3>
-        <div className="space-y-3">
-          {headers.map((header) => (
-            <div key={header} className="flex items-center gap-4">
-              <span className="w-40 text-sm text-gray-600 font-mono">{header}</span>
+      <div className="flex flex-col gap-4">
+        <p className="text-sm text-gray-600">{t("csv.mapColumns")}</p>
+        <div className="flex flex-col gap-2">
+          {parsed.headers.map((header, index) => (
+            <div key={index} className="flex items-center gap-3">
+              <span className="w-40 text-sm font-medium text-gray-700">{header}</span>
               <Select
-                options={SYSTEM_COLUMNS}
-                value={mapping[header] ?? ''}
-                onChange={(e) => setMapping((prev) => ({ ...prev, [header]: e.target.value }))}
-                className="flex-1"
+                placeholder={t("csv.ignore")}
+                value={mapping[index] ?? ""}
+                onChange={(e) =>
+                  setMapping((prev) => ({ ...prev, [index]: e.target.value }))
+                }
+                options={targets}
               />
             </div>
           ))}
         </div>
-        <div className="flex gap-2 justify-end">
-          <Button variant="secondary" onClick={() => setStep('upload')}>Indietro</Button>
-          <Button onClick={() => setStep('preview')}>Avanti</Button>
+        <div className="flex justify-end">
+          <Button onClick={() => setStep("preview")}>{t("common.next")}</Button>
         </div>
       </div>
-    )
+    );
   }
 
-  if (step === 'preview') {
-    const preview = rows.slice(0, 5)
+  if (step === "preview" && parsed) {
+    const rows = buildRows();
     return (
-      <div className="space-y-4">
-        <h3 className="font-medium text-gray-900">{t.csv_preview}</h3>
-        <div className="overflow-x-auto rounded-md border border-gray-200">
-          <table className="w-full text-xs">
-            <thead className="bg-gray-50">
-              <tr>
-                {headers.map((h) => (
-                  <th key={h} className="px-3 py-2 text-left font-medium text-gray-500">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {preview.map((row, i) => (
-                <tr key={i} className="border-t border-gray-100">
-                  {row.map((cell, j) => (
-                    <td key={j} className="px-3 py-2 text-gray-700">{cell}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="text-sm text-gray-500">{rows.length} righe totali</p>
-        <div className="flex gap-2 justify-end">
-          <Button variant="secondary" onClick={() => setStep('mapping')}>Indietro</Button>
-          <Button onClick={handleImport}>{t.csv_import}</Button>
+      <div className="flex flex-col gap-4">
+        <p className="text-sm text-gray-600">{t("csv.preview", { count: rows.length })}</p>
+        <Table>
+          <THead>
+            <TR>
+              <TH>{t("products.name")}</TH>
+              <TH>{t("products.sku")}</TH>
+              <TH>{t("products.gtin")}</TH>
+            </TR>
+          </THead>
+          <TBody>
+            {rows.slice(0, 8).map((row, index) => (
+              <TR key={index}>
+                <TD>{row.name || "-"}</TD>
+                <TD>{row.sku ?? "-"}</TD>
+                <TD>{row.gtin ?? "-"}</TD>
+              </TR>
+            ))}
+          </TBody>
+        </Table>
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={() => setStep("map")}>
+            {t("common.back")}
+          </Button>
+          <Button loading={busy} onClick={() => void runImport()}>
+            {t("csv.import", { count: rows.length })}
+          </Button>
         </div>
       </div>
-    )
+    );
   }
 
-  return (
-    <div className="space-y-4">
-      <h3 className="font-medium text-gray-900">{t.csv_import}</h3>
-      {!done ? (
-        <div className="space-y-2">
-          <div className="h-3 w-full rounded-full bg-gray-200 overflow-hidden">
-            <div
-              className="h-3 rounded-full bg-green-500 transition-all"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <p className="text-sm text-gray-600">{progress}% completato</p>
+  if (step === "result" && result) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <FileSpreadsheet className="h-5 w-5 text-brand-600" />
+          <span className="font-medium text-gray-900">{t("csv.result")}</span>
         </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-green-700">
-            <CheckCircle className="h-5 w-5" />
-            <span className="text-sm font-medium">Importazione completata</span>
-          </div>
-          {errors.length > 0 && (
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-red-700">{t.csv_errors}</p>
-              {errors.map((err, i) => (
-                <p key={i} className="text-xs text-red-600">Riga {err.row}: {err.message}</p>
-              ))}
-            </div>
-          )}
-          <Button onClick={onDone}>Chiudi</Button>
+        <div className="flex gap-2">
+          <Badge variant="success">{t("csv.imported", { count: result.imported })}</Badge>
+          {result.errors.length > 0 ? (
+            <Badge variant="danger">{t("csv.failed", { count: result.errors.length })}</Badge>
+          ) : null}
         </div>
-      )}
-    </div>
-  )
+        {result.errors.length > 0 ? (
+          <ul className="flex flex-col gap-1 text-sm text-red-600">
+            {result.errors.map((error) => (
+              <li key={error.row}>
+                {t("csv.rowError", { row: error.row, error: error.message })}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+    );
+  }
+
+  return null;
 }

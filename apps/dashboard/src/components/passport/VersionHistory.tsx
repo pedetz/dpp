@@ -1,63 +1,77 @@
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { ChevronDown, ChevronRight } from 'lucide-react'
-import type { PassportVersion } from '@passaporto/shared'
-import { supabase } from '@/lib/supabase'
-import { formatDate } from '@/lib/utils'
-import { Spinner } from '@/components/ui/Spinner'
+import { useState } from "react";
+import { History } from "lucide-react";
+import type { PassportVersion } from "@passaporto/shared";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { useVersions } from "@/hooks/usePassport";
+import { diffData } from "@/lib/diff";
+import type { DiffEntry } from "@/lib/diff";
+import { formatDate } from "@/lib/utils";
+import { t } from "@/i18n";
 
-interface VersionHistoryProps {
-  productId: string
+function diffVariant(kind: DiffEntry["kind"]) {
+  if (kind === "added") return "success" as const;
+  if (kind === "removed") return "danger" as const;
+  return "warning" as const;
 }
 
-export function VersionHistory({ productId }: VersionHistoryProps) {
-  const [expanded, setExpanded] = useState<number | null>(null)
+function diffLabel(kind: DiffEntry["kind"]) {
+  if (kind === "added") return t("passport.diffAdded");
+  if (kind === "removed") return t("passport.diffRemoved");
+  return t("passport.diffChanged");
+}
 
-  const { data: versions, isLoading } = useQuery({
-    queryKey: ['versions', productId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('passport_versions')
-        .select('*')
-        .eq('product_id', productId)
-        .order('version', { ascending: false })
-      if (error) throw error
-      return data as PassportVersion[]
-    },
-  })
+export function VersionHistory({ productId }: { productId: string }) {
+  const { data, isLoading } = useVersions(productId);
+  const [openVersion, setOpenVersion] = useState<number | null>(null);
 
-  if (isLoading) return <Spinner />
-  if (!versions?.length) return <p className="text-sm text-gray-500 italic">Nessuna versione pubblicata.</p>
+  if (isLoading) return <p className="text-sm text-gray-500">{t("common.loading")}</p>;
+
+  if (!data || data.length === 0) {
+    return <EmptyState icon={History} title={t("passport.noVersions")} />;
+  }
 
   return (
-    <div className="space-y-2">
-      {versions.map((v) => (
-        <div key={v.version} className="rounded-md border border-gray-200 overflow-hidden">
-          <button
-            className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-            onClick={() => setExpanded(expanded === v.version ? null : v.version)}
-          >
-            <span className="text-sm font-medium text-gray-900">
-              Versione {v.version}
-            </span>
-            <div className="flex items-center gap-2 text-gray-500">
-              <span className="text-xs">{formatDate(v.published_at)}</span>
-              {expanded === v.version ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
+    <ul className="flex flex-col gap-3">
+      {data.map((version: PassportVersion, index) => {
+        const previous = data[index + 1];
+        const entries = previous ? diffData(previous.data, version.data) : [];
+        const expanded = openVersion === version.version;
+        return (
+          <li key={version.version} className="rounded-lg border border-gray-200 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-900">
+                  {t("products.version", { version: version.version })}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {t("passport.publishedAt")} {formatDate(version.published_at)}
+                </p>
+              </div>
+              {entries.length > 0 ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setOpenVersion(expanded ? null : version.version)}
+                >
+                  {t("passport.viewDiff")}
+                </Button>
+              ) : null}
             </div>
-          </button>
-          {expanded === v.version && (
-            <div className="border-t border-gray-100 px-4 py-3 bg-gray-50">
-              <pre className="text-xs text-gray-600 overflow-auto max-h-48">
-                {JSON.stringify(v.data, null, 2)}
-              </pre>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  )
+            {expanded ? (
+              <ul className="mt-3 flex flex-col gap-1 border-t border-gray-100 pt-3">
+                {entries.map((entry) => (
+                  <li key={entry.key} className="flex items-center gap-2 text-sm">
+                    <Badge variant={diffVariant(entry.kind)}>{diffLabel(entry.kind)}</Badge>
+                    <span className="text-gray-700">{entry.key}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </li>
+        );
+      })}
+    </ul>
+  );
 }

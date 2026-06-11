@@ -1,80 +1,56 @@
-import { cn } from '@/lib/utils'
+import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
-interface Column<T> {
-  key: string
-  header: string
-  render: (row: T) => React.ReactNode
-  className?: string
-}
-
-interface TableProps<T> {
-  columns: Column<T>[]
-  data: T[]
-  loading?: boolean
-  keyExtractor: (row: T) => string
-  className?: string
-}
-
-export function Table<T>({ columns, data, loading, keyExtractor, className }: TableProps<T>) {
-  if (loading) {
-    return (
-      <div className={cn('overflow-x-auto rounded-lg border border-gray-200', className)}>
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr>
-              {columns.map((col) => (
-                <th
-                  key={col.key}
-                  className={cn('px-4 py-3 text-left font-medium text-gray-500', col.className)}
-                >
-                  {col.header}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {Array.from({ length: 4 }).map((_, i) => (
-              <tr key={i} className="border-t border-gray-100">
-                {columns.map((col) => (
-                  <td key={col.key} className="px-4 py-3">
-                    <div className="h-4 w-full animate-pulse rounded bg-gray-200" />
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    )
-  }
-
+export function Table({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn('overflow-x-auto rounded-lg border border-gray-200', className)}>
-      <table className="w-full text-sm">
-        <thead className="bg-gray-50">
-          <tr>
-            {columns.map((col) => (
-              <th
-                key={col.key}
-                className={cn('px-4 py-3 text-left font-medium text-gray-500', col.className)}
-              >
-                {col.header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row) => (
-            <tr key={keyExtractor(row)} className="border-t border-gray-100 hover:bg-gray-50 transition-colors">
-              {columns.map((col) => (
-                <td key={col.key} className={cn('px-4 py-3', col.className)}>
-                  {col.render(row)}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
+    <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      <table className={cn("min-w-full divide-y divide-gray-200 text-sm", className)}>
+        {children}
       </table>
     </div>
-  )
+  );
+}
+
+export function THead({ children }: { children: ReactNode }) {
+  return <thead className="bg-gray-50">{children}</thead>;
+}
+
+export function TBody({ children }: { children: ReactNode }) {
+  return <tbody className="divide-y divide-gray-100">{children}</tbody>;
+}
+
+export function TR({
+  children,
+  className,
+  onClick,
+}: {
+  children: ReactNode;
+  className?: string;
+  onClick?: () => void;
+}) {
+  return (
+    <tr
+      onClick={onClick}
+      className={cn(onClick && "cursor-pointer hover:bg-gray-50", className)}
+    >
+      {children}
+    </tr>
+  );
+}
+
+export function TH({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <th
+      className={cn(
+        "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500",
+        className,
+      )}
+    >
+      {children}
+    </th>
+  );
+}
+
+export function TD({ children, className }: { children: ReactNode; className?: string }) {
+  return <td className={cn("px-4 py-3 text-gray-700", className)}>{children}</td>;
 }

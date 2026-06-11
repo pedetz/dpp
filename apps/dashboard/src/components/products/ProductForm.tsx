@@ -1,152 +1,116 @@
-import { useState } from 'react'
-import { Upload, X } from 'lucide-react'
-import type { Product, ProductData } from '@passaporto/shared'
-import { useTemplates } from '@/hooks/useTemplates'
-import { FieldRenderer } from '@/components/fields/FieldRenderer'
-import { Input } from '@/components/ui/Input'
-import { Select } from '@/components/ui/Select'
-import { Button } from '@/components/ui/Button'
-import { supabase } from '@/lib/supabase'
-import t from '@/i18n/it.json'
+import { useState } from "react";
+import { X } from "lucide-react";
+import type { ProductData, TemplateField } from "@passaporto/shared";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { FileUpload } from "@/components/ui/FileUpload";
+import { FieldRenderer } from "@/components/fields/FieldRenderer";
+import { uploadPublicImage } from "@/lib/storage";
+import { useToast } from "@/components/ui/Toast";
+import { t } from "@/i18n";
 
-const CATEGORIES = [
-  { value: 'tessile', label: 'Tessile' },
-]
-
-interface ProductFormProps {
-  initial?: Partial<Product>
-  onSave: (values: {
-    name: string
-    sku: string
-    gtin: string
-    category: string
-    data: ProductData
-    images: string[]
-  }) => Promise<void>
-  loading?: boolean
+export interface ProductFormValue {
+  name: string;
+  sku: string;
+  gtin: string;
+  category: string;
+  data: ProductData;
+  images: string[];
 }
 
-export function ProductForm({ initial, onSave, loading }: ProductFormProps) {
-  const [name, setName] = useState(initial?.name ?? '')
-  const [sku, setSku] = useState(initial?.sku ?? '')
-  const [gtin, setGtin] = useState(initial?.gtin ?? '')
-  const [category, setCategory] = useState(initial?.category ?? 'tessile')
-  const [data, setData] = useState<ProductData>(initial?.data ?? {})
-  const [images, setImages] = useState<string[]>(initial?.images ?? [])
-  const [uploadingImage, setUploadingImage] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
+interface ProductFormProps {
+  value: ProductFormValue;
+  fields: TemplateField[];
+  onChange: (value: ProductFormValue) => void;
+  imagePrefix: string;
+}
 
-  const { data: fields } = useTemplates(category)
+export function ProductForm({ value, fields, onChange, imagePrefix }: ProductFormProps) {
+  const toast = useToast();
+  const [uploading, setUploading] = useState(false);
 
-  const setField = (key: string, value: unknown) => {
-    setData((prev) => ({ ...prev, [key]: value }))
-  }
+  const setField = (key: string, fieldValue: unknown) => {
+    onChange({ ...value, data: { ...value.data, [key]: fieldValue } });
+  };
 
-  const validate = () => {
-    const errs: Record<string, string> = {}
-    if (!name.trim()) errs.name = 'Campo obbligatorio'
-    if (!category) errs.category = 'Campo obbligatorio'
-    setErrors(errs)
-    return Object.keys(errs).length === 0
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!validate()) return
-    await onSave({ name, sku, gtin, category, data, images })
-  }
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploadingImage(true)
+  const handleImage = async (file: File) => {
+    setUploading(true);
     try {
-      const path = `products/${Date.now()}-${file.name}`
-      const { error } = await supabase.storage.from('images').upload(path, file)
-      if (error) throw error
-      const { data: urlData } = supabase.storage.from('images').getPublicUrl(path)
-      setImages((prev) => [...prev, urlData.publicUrl])
+      const url = await uploadPublicImage(imagePrefix, file);
+      onChange({ ...value, images: [...value.images, url] });
+    } catch {
+      toast.error(t("common.error"));
     } finally {
-      setUploadingImage(false)
+      setUploading(false);
     }
-  }
+  };
+
+  const removeImage = (url: string) => {
+    onChange({ ...value, images: value.images.filter((image) => image !== url) });
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Input
-          label={t.product_name}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          error={errors.name}
-          required
-        />
-        <Input
-          label={t.product_sku}
-          value={sku}
-          onChange={(e) => setSku(e.target.value)}
-        />
-        <Input
-          label={t.product_gtin}
-          value={gtin}
-          onChange={(e) => setGtin(e.target.value)}
+          label={t("products.name")}
+          value={value.name}
+          onChange={(e) => onChange({ ...value, name: e.target.value })}
         />
         <Select
-          label={t.product_category}
-          options={CATEGORIES}
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          error={errors.category}
+          label={t("products.category")}
+          value={value.category}
+          onChange={(e) => onChange({ ...value, category: e.target.value })}
+          options={[{ value: "tessile", label: t("products.categoryTextile") }]}
+        />
+        <Input
+          label={t("products.sku")}
+          value={value.sku}
+          onChange={(e) => onChange({ ...value, sku: e.target.value })}
+        />
+        <Input
+          label={t("products.gtin")}
+          value={value.gtin}
+          onChange={(e) => onChange({ ...value, gtin: e.target.value })}
         />
       </div>
 
-      {fields && fields.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-            Dati passaporto
-          </h3>
-          {fields.map((field) => (
-            <FieldRenderer
-              key={field.key}
-              field={field}
-              data={data}
-              onChange={setField}
-            />
-          ))}
-        </div>
-      )}
-
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">{t.product_images}</label>
-        <div className="flex flex-wrap gap-2">
-          {images.map((url, i) => (
-            <div key={i} className="relative">
-              <img src={url} alt="" className="h-20 w-20 rounded-md object-cover border border-gray-200" />
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-medium text-gray-700">{t("products.images")}</span>
+        <div className="flex flex-wrap gap-3">
+          {value.images.map((url) => (
+            <div key={url} className="relative h-20 w-20 overflow-hidden rounded-lg border">
+              <img src={url} alt="" className="h-full w-full object-cover" />
               <button
                 type="button"
-                onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
-                className="absolute -top-1 -right-1 rounded-full bg-red-600 p-0.5 text-white hover:bg-red-700"
+                onClick={() => removeImage(url)}
+                className="absolute right-1 top-1 rounded-full bg-black/60 p-0.5 text-white"
+                aria-label={t("common.remove")}
               >
                 <X className="h-3 w-3" />
               </button>
             </div>
           ))}
-          <label className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-md border-2 border-dashed border-gray-300 hover:border-green-400 transition-colors">
-            {uploadingImage ? (
-              <div className="animate-spin h-5 w-5 border-2 border-green-500 rounded-full border-t-transparent" />
-            ) : (
-              <Upload className="h-6 w-6 text-gray-400" />
-            )}
-            <input type="file" accept="image/*" className="sr-only" onChange={handleImageUpload} />
-          </label>
         </div>
+        <FileUpload
+          accept="image/*"
+          label={t("common.upload")}
+          disabled={uploading}
+          onSelect={(file) => void handleImage(file)}
+        />
       </div>
 
-      <div className="flex justify-end">
-        <Button type="submit" loading={loading}>
-          {t.btn_save}
-        </Button>
+      <div className="flex flex-col gap-4">
+        <h3 className="text-sm font-semibold text-gray-900">{t("products.data")}</h3>
+        {fields.map((field) => (
+          <FieldRenderer
+            key={field.key}
+            field={field}
+            value={value.data[field.key]}
+            onChange={(fieldValue) => setField(field.key, fieldValue)}
+          />
+        ))}
       </div>
-    </form>
-  )
+    </div>
+  );
 }

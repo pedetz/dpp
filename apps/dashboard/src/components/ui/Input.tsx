@@ -1,38 +1,34 @@
-import { cn } from '@/lib/utils'
-import type { InputHTMLAttributes } from 'react'
+import { forwardRef } from "react";
+import type { InputHTMLAttributes } from "react";
+import { cn } from "@/lib/utils";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string
-  error?: string
-  helper?: string
+  label?: string;
+  error?: string;
 }
 
-export function Input({ label, error, helper, className, id, ...props }: InputProps) {
-  const inputId = id ?? label?.toLowerCase().replace(/\s+/g, '-')
-
+export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
+  { label, error, className, id, ...rest },
+  ref,
+) {
   return (
     <div className="flex flex-col gap-1">
-      {label && (
-        <label htmlFor={inputId} className="text-sm font-medium text-gray-700">
+      {label ? (
+        <label htmlFor={id} className="text-sm font-medium text-gray-700">
           {label}
         </label>
-      )}
+      ) : null}
       <input
-        id={inputId}
+        ref={ref}
+        id={id}
         className={cn(
-          'rounded-md border px-3 py-2 text-sm shadow-sm transition-colors',
-          'focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent',
-          'placeholder:text-gray-400',
-          error
-            ? 'border-red-500 focus:ring-red-500'
-            : 'border-gray-300',
-          'disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500',
+          "rounded-lg border-gray-300 text-sm shadow-sm focus:border-brand-500 focus:ring-brand-500",
+          error && "border-red-400",
           className,
         )}
-        {...props}
+        {...rest}
       />
-      {error && <p className="text-xs text-red-600">{error}</p>}
-      {helper && !error && <p className="text-xs text-gray-500">{helper}</p>}
+      {error ? <span className="text-xs text-red-600">{error}</span> : null}
     </div>
-  )
-}
+  );
+});

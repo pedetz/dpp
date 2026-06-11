@@ -1,48 +1,80 @@
-import type { Product } from '@passaporto/shared'
-import { useTemplates } from '@/hooks/useTemplates'
-import { useProducts } from '@/hooks/useProducts'
-import { missingRequiredFields } from '@/lib/conformity'
-import { Modal } from '@/components/ui/Modal'
-import { Button } from '@/components/ui/Button'
-import { ConformityChecklist } from '@/components/fields/ConformityChecklist'
-import t from '@/i18n/it.json'
+import { useState } from "react";
+import { Rocket } from "lucide-react";
+import type { Product, TemplateField } from "@passaporto/shared";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { Textarea } from "@/components/ui/Textarea";
+import { ConformityChecklist } from "@/components/fields/ConformityChecklist";
+import { usePublish } from "@/hooks/usePassport";
+import { isPublishable } from "@/lib/conformity";
+import { useToast } from "@/components/ui/Toast";
+import { t } from "@/i18n";
 
 interface PublishFlowProps {
-  product: Product
-  open: boolean
-  onClose: () => void
+  product: Product;
+  fields: TemplateField[];
+  orgId: string | null;
 }
 
-export function PublishFlow({ product, open, onClose }: PublishFlowProps) {
-  const { data: fields } = useTemplates(product.category)
-  const { publish } = useProducts()
+export function PublishFlow({ product, fields, orgId }: PublishFlowProps) {
+  const [open, setOpen] = useState(false);
+  const [changelog, setChangelog] = useState("");
+  const publish = usePublish(orgId);
+  const toast = useToast();
+  const canPublish = isPublishable(product, fields);
+  const nextVersion = product.current_version + 1;
 
-  const missing = fields ? missingRequiredFields(fields, product.data) : []
-  const canPublish = missing.length === 0
-
-  const handlePublish = async () => {
-    await publish.mutateAsync(product.id)
-    onClose()
-  }
+  const handle = () => {
+    publish.mutate(
+      { product, changelog },
+      {
+        onSuccess: () => {
+          toast.success(t("passport.publishedToast"));
+          setOpen(false);
+          setChangelog("");
+        },
+        onError: () => toast.error(t("common.error")),
+      },
+    );
+  };
 
   return (
-    <Modal open={open} onClose={onClose} title={t.publish_confirm}>
-      <div className="space-y-4">
-        <p className="text-sm text-gray-600">{t.publish_warning}</p>
+    <>
+      <Button disabled={!canPublish} onClick={() => setOpen(true)}>
+        <Rocket className="h-4 w-4" />
+        {product.status === "published" ? t("passport.republish") : t("passport.publish")}
+      </Button>
+      {!canPublish ? (
+        <p className="mt-1 text-xs text-red-600">{t("passport.publishBlocked")}</p>
+      ) : null}
 
-        {fields && <ConformityChecklist fields={fields} data={product.data} />}
-
-        <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={onClose}>Annulla</Button>
-          <Button
-            disabled={!canPublish}
-            loading={publish.isPending}
-            onClick={handlePublish}
-          >
-            {t.btn_publish} ora
-          </Button>
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title={t("passport.publishTitle")}
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setOpen(false)}>
+              {t("common.cancel")}
+            </Button>
+            <Button loading={publish.isPending} onClick={handle}>
+              {t("passport.publish")}
+            </Button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-gray-600">
+            {t("passport.publishBody", { version: nextVersion })}
+          </p>
+          <ConformityChecklist fields={fields} data={product.data} />
+          <Textarea
+            label={t("passport.changelogLabel")}
+            value={changelog}
+            onChange={(e) => setChangelog(e.target.value)}
+          />
         </div>
-      </div>
-    </Modal>
-  )
+      </Modal>
+    </>
+  );
 }

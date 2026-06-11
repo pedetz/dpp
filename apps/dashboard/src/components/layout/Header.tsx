@@ -1,58 +1,56 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Settings, LogOut, ChevronDown } from 'lucide-react'
-import { useOrg } from '@/hooks/useOrg'
-import { useAuth } from '@/hooks/useAuth'
-import t from '@/i18n/it.json'
+import { ChevronDown, LogOut, Building2, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useOrg } from "@/hooks/useOrg";
+import { Avatar } from "@/components/ui/Avatar";
+import { DropdownMenu, DropdownItem } from "@/components/ui/DropdownMenu";
+import { PlanBadge } from "@/components/billing/PlanBadge";
+import { t } from "@/i18n";
 
 export function Header() {
-  const { org } = useOrg()
-  const { signOut } = useAuth()
-  const navigate = useNavigate()
-  const [open, setOpen] = useState(false)
-
-  const handleSignOut = async () => {
-    await signOut()
-    navigate('/login')
-  }
+  const { user, signOut } = useAuth();
+  const { org, orgs, switchOrg } = useOrg();
+  const navigate = useNavigate();
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
-      <span className="text-sm font-medium text-gray-700">{org?.name ?? ''}</span>
+    <header className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3">
+      <DropdownMenu
+        align="left"
+        trigger={
+          <span className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-gray-50">
+            <Avatar name={org?.name ?? "?"} src={org?.logo_url} />
+            <span className="text-sm font-medium text-gray-900">{org?.name}</span>
+            {org ? <PlanBadge plan={org.plan} /> : null}
+            <ChevronDown className="h-4 w-4 text-gray-400" />
+          </span>
+        }
+      >
+        {orgs.map((item) => (
+          <DropdownItem key={item.id} onSelect={() => switchOrg(item.id)}>
+            <Building2 className="h-4 w-4" />
+            {item.name}
+          </DropdownItem>
+        ))}
+      </DropdownMenu>
 
-      <div className="relative">
-        <button
-          onClick={() => setOpen((v) => !v)}
-          className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-        >
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100 text-green-700 font-semibold text-xs">
-            {org?.name?.charAt(0)?.toUpperCase() ?? 'U'}
-          </div>
-          <ChevronDown className="h-4 w-4 text-gray-400" />
-        </button>
-
-        {open && (
-          <>
-            <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-            <div className="absolute right-0 top-full z-20 mt-1 w-44 rounded-md border border-gray-200 bg-white shadow-lg py-1">
-              <button
-                onClick={() => { setOpen(false); navigate('/settings') }}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              >
-                <Settings className="h-4 w-4" />
-                {t.nav_settings}
-              </button>
-              <button
-                onClick={handleSignOut}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-              >
-                <LogOut className="h-4 w-4" />
-                {t.btn_logout}
-              </button>
-            </div>
-          </>
-        )}
-      </div>
+      <DropdownMenu
+        trigger={
+          <span className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-gray-50">
+            <Avatar name={user?.email ?? "?"} />
+            <span className="hidden text-sm text-gray-700 sm:inline">{user?.email}</span>
+            <ChevronDown className="h-4 w-4 text-gray-400" />
+          </span>
+        }
+      >
+        <DropdownItem onSelect={() => navigate("/settings/members")}>
+          <Users className="h-4 w-4" />
+          {t("nav.members")}
+        </DropdownItem>
+        <DropdownItem onSelect={() => void signOut()} danger>
+          <LogOut className="h-4 w-4" />
+          {t("auth.logout")}
+        </DropdownItem>
+      </DropdownMenu>
     </header>
-  )
+  );
 }

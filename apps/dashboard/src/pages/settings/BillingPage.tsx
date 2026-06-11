@@ -1,84 +1,112 @@
-import { useQuery } from '@tanstack/react-query'
-import type { Subscription } from '@passaporto/shared'
-import { supabase } from '@/lib/supabase'
-import { useOrg } from '@/hooks/useOrg'
-import { PageHeader } from '@/components/layout/PageHeader'
-import { PlanCard } from '@/components/billing/PlanCard'
-import { CheckoutRedirect } from '@/components/billing/CheckoutRedirect'
-import { Button } from '@/components/ui/Button'
-import { plans, planOrder } from '@/lib/plans'
-import t from '@/i18n/it.json'
+import { Check } from "lucide-react";
+import type { Plan } from "@passaporto/shared";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { SettingsTabs } from "@/components/layout/SettingsTabs";
+import { Card, CardBody } from "@/components/ui/Card";
+import { Spinner } from "@/components/ui/Spinner";
+import { Button } from "@/components/ui/Button";
+import { PlanBadge } from "@/components/billing/PlanBadge";
+import { CheckoutRedirect } from "@/components/billing/CheckoutRedirect";
+import { CustomerPortalLink } from "@/components/billing/CustomerPortalLink";
+import { useOrg } from "@/hooks/useOrg";
+import { useSubscription } from "@/hooks/useBilling";
+import { planOrder, getPlan } from "@/lib/plans";
+import { formatDate, formatPrice } from "@/lib/utils";
+import { t } from "@/i18n";
 
-export default function BillingPage() {
-  const { org } = useOrg()
+function PlanColumn({
+  plan,
+  current,
+  orgId,
+}: {
+  plan: Plan;
+  current: boolean;
+  orgId: string | null;
+}) {
+  const def = getPlan(plan);
+  return (
+    <Card className={current ? "ring-2 ring-brand-500" : undefined}>
+      <CardBody className="flex flex-col gap-4">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">
+            {t(`billing.plans.${plan}`)}
+          </h3>
+          <div className="mt-1 flex items-baseline gap-1">
+            <span className="text-2xl font-bold text-gray-900">
+              {def.priceMonthly === 0 ? t("billing.free") : formatPrice(def.priceMonthly)}
+            </span>
+            {def.priceMonthly > 0 ? (
+              <span className="text-sm text-gray-500">{t("billing.perMonth")}</span>
+            ) : null}
+          </div>
+        </div>
+        <ul className="flex flex-1 flex-col gap-2 text-sm text-gray-600">
+          {def.featureKeys.map((key) => (
+            <li key={key} className="flex items-center gap-2">
+              <Check className="h-4 w-4 text-green-500" />
+              {t(`billing.features.${key}`)}
+            </li>
+          ))}
+        </ul>
+        {plan === "trial" ? (
+          <Button variant="secondary" disabled>
+            {current ? t("billing.currentLabel") : t("billing.choosePlan")}
+          </Button>
+        ) : (
+          <CheckoutRedirect orgId={orgId} plan={plan} current={current} />
+        )}
+      </CardBody>
+    </Card>
+  );
+}
 
-  const { data: subscription } = useQuery({
-    queryKey: ['subscription', org?.id],
-    enabled: !!org?.id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('org_id', org!.id)
-        .maybeSingle()
-      if (error) throw error
-      return data as Subscription | null
-    },
-  })
+export function BillingPage() {
+  const { org, orgId } = useOrg();
+  const { data: subscription, isLoading } = useSubscription(orgId);
+  const currentPlan = subscription?.plan ?? org?.plan ?? "trial";
 
-  const currentPlan = org?.plan ?? 'trial'
-
-  const handlePortal = async () => {
-    const { data, error } = await supabase.functions.invoke('create-portal-session', {
-      body: { returnUrl: window.location.href },
-    })
-    if (!error && data?.url) window.location.href = data.url
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Spinner />
+      </div>
+    );
   }
-
-  const displayedPlans = planOrder.filter((p) => p !== 'trial')
 
   return (
     <div>
-      <PageHeader
-        title={t.nav_billing}
-        subtitle={`Piano attuale: ${currentPlan}`}
-        actions={
-          subscription?.stripe_customer_id ? (
-            <Button variant="secondary" onClick={handlePortal}>
-              {t.billing_manage}
-            </Button>
-          ) : undefined
-        }
-      />
+      <PageHeader title={t("billing.title")} subtitle={t("billing.subtitle")} />
+      <SettingsTabs />
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 max-w-4xl">
-        {displayedPlans.map((plan) => {
-          const def = plans[plan]
-          return (
-            <PlanCard
+      <div className="flex flex-col gap-6">
+        <Card>
+          <CardBody className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-500">{t("billing.currentPlan")}</span>
+              <PlanBadge plan={currentPlan} />
+              {subscription?.current_period_end ? (
+                <span className="text-sm text-gray-500">
+                  {t("billing.renewsOn", {
+                    date: formatDate(subscription.current_period_end),
+                  })}
+                </span>
+              ) : null}
+            </div>
+            {subscription?.stripe_customer_id ? <CustomerPortalLink orgId={orgId} /> : null}
+          </CardBody>
+        </Card>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {planOrder.map((plan) => (
+            <PlanColumn
               key={plan}
               plan={plan}
-              priceMonthly={def.priceMonthly}
-              featureKeys={def.featureKeys}
-              isCurrent={currentPlan === plan}
-              onSelect={currentPlan !== plan ? undefined : undefined}
+              current={currentPlan === plan}
+              orgId={orgId}
             />
-          )
-        })}
-      </div>
-
-      {currentPlan === 'trial' && (
-        <div className="mt-6">
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 max-w-lg">
-            <p className="text-sm text-amber-800 font-medium">Sei nel piano Trial gratuito.</p>
-            <p className="mt-1 text-sm text-amber-700">Passa a un piano a pagamento per sbloccare più prodotti e funzionalità.</p>
-            <div className="mt-3 flex gap-2">
-              <CheckoutRedirect plan="starter" label={`${t.billing_upgrade} Starter`} />
-              <CheckoutRedirect plan="pro" label={`${t.billing_upgrade} Pro`} />
-            </div>
-          </div>
+          ))}
         </div>
-      )}
+      </div>
     </div>
-  )
+  );
 }

@@ -1,24 +1,19 @@
-import { Select } from '@/components/ui/Select'
-import { countries } from '@/lib/countries'
+import { Select } from "@/components/ui/Select";
+import { countries } from "@/lib/countries";
+import { t } from "@/i18n";
 
 interface CountryFieldProps {
-  label?: string
-  value: string
-  onChange: (v: string) => void
-  error?: string
+  value: string;
+  onChange: (value: string) => void;
 }
 
-const options = countries.map((c) => ({ value: c.code, label: c.name_it }))
-
-export function CountryField({ label, value, onChange, error }: CountryFieldProps) {
+export function CountryField({ value, onChange }: CountryFieldProps) {
   return (
     <Select
-      label={label}
-      options={options}
       value={value}
+      placeholder={t("fields.selectCountry")}
       onChange={(e) => onChange(e.target.value)}
-      error={error}
-      placeholder="Seleziona paese"
+      options={countries.map((c) => ({ value: c.code, label: c.name_it }))}
     />
-  )
+  );
 }

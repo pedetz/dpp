@@ -1,32 +1,36 @@
-import { useState } from 'react'
-import type { Plan } from '@passaporto/shared'
-import { Button } from '@/components/ui/Button'
-import { supabase } from '@/lib/supabase'
+import type { Plan } from "@passaporto/shared";
+import { Button } from "@/components/ui/Button";
+import { useCheckout } from "@/hooks/useBilling";
+import { useToast } from "@/components/ui/Toast";
+import { t } from "@/i18n";
 
 interface CheckoutRedirectProps {
-  plan: Plan
-  label: string
+  orgId: string | null;
+  plan: Plan;
+  current: boolean;
 }
 
-export function CheckoutRedirect({ plan, label }: CheckoutRedirectProps) {
-  const [loading, setLoading] = useState(false)
+export function CheckoutRedirect({ orgId, plan, current }: CheckoutRedirectProps) {
+  const checkout = useCheckout(orgId);
+  const toast = useToast();
 
-  const handleClick = async () => {
-    setLoading(true)
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-        body: { plan, returnUrl: window.location.href },
-      })
-      if (error) throw error
-      if (data?.url) window.location.href = data.url
-    } finally {
-      setLoading(false)
-    }
-  }
+  const handle = () => {
+    checkout.mutate(plan, {
+      onSuccess: (url) => {
+        window.location.href = url;
+      },
+      onError: () => toast.error(t("common.error")),
+    });
+  };
 
   return (
-    <Button onClick={handleClick} loading={loading}>
-      {label}
+    <Button
+      variant={current ? "secondary" : "primary"}
+      disabled={current}
+      loading={checkout.isPending}
+      onClick={handle}
+    >
+      {current ? t("billing.currentLabel") : t("billing.choosePlan")}
     </Button>
-  )
+  );
 }

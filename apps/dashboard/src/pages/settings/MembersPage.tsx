@@ -1,144 +1,107 @@
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Trash2 } from 'lucide-react'
-import type { OrgMember, MemberRole } from '@passaporto/shared'
-import { supabase } from '@/lib/supabase'
-import { useOrg } from '@/hooks/useOrg'
-import { useAuth } from '@/hooks/useAuth'
-import { PageHeader } from '@/components/layout/PageHeader'
-import { Card } from '@/components/ui/Card'
-import { Input } from '@/components/ui/Input'
-import { Select } from '@/components/ui/Select'
-import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
-import { useToast } from '@/components/ui/Toast'
-import t from '@/i18n/it.json'
+import { useState } from "react";
+import { UserPlus } from "lucide-react";
+import type { OrgMember, Role } from "@passaporto/shared";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { SettingsTabs } from "@/components/layout/SettingsTabs";
+import { Button } from "@/components/ui/Button";
+import { Spinner } from "@/components/ui/Spinner";
+import { Select } from "@/components/ui/Select";
+import { Avatar } from "@/components/ui/Avatar";
+import { Badge } from "@/components/ui/Badge";
+import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/Table";
+import { InviteMember } from "@/components/onboarding/InviteMember";
+import { useAuth } from "@/hooks/useAuth";
+import { useOrg, useOrgMembers, useUpdateMemberRole, useRemoveMember } from "@/hooks/useOrg";
+import { useToast } from "@/components/ui/Toast";
+import { t } from "@/i18n";
 
-const ROLE_OPTIONS = [
-  { value: 'editor', label: t.members_role_editor },
-  { value: 'viewer', label: t.members_role_viewer },
-]
+const roleOptions = [
+  { value: "owner", label: t("members.roleOwner") },
+  { value: "editor", label: t("members.roleEditor") },
+  { value: "viewer", label: t("members.roleViewer") },
+];
 
-const roleLabels: Record<MemberRole, string> = {
-  owner: t.members_role_owner,
-  editor: t.members_role_editor,
-  viewer: t.members_role_viewer,
-}
+export function MembersPage() {
+  const toast = useToast();
+  const { user } = useAuth();
+  const { orgId } = useOrg();
+  const { data, isLoading } = useOrgMembers(orgId);
+  const updateRole = useUpdateMemberRole(orgId);
+  const removeMember = useRemoveMember(orgId);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
-export default function MembersPage() {
-  const { org, isOwner } = useOrg()
-  const { session } = useAuth()
-  const { toast } = useToast()
-  const qc = useQueryClient()
-  const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState<MemberRole>('editor')
-
-  const { data: members } = useQuery({
-    queryKey: ['members', org?.id],
-    enabled: !!org?.id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('org_members')
-        .select('*')
-        .eq('org_id', org!.id)
-      if (error) throw error
-      return data as OrgMember[]
-    },
-  })
-
-  const invite = useMutation({
-    mutationFn: async ({ email, role }: { email: string; role: MemberRole }) => {
-      const { error } = await supabase.functions.invoke('invite-member', {
-        body: { org_id: org!.id, email, role },
-      })
-      if (error) throw error
-    },
-    onSuccess: () => {
-      toast('Invito inviato', 'success')
-      setInviteEmail('')
-      qc.invalidateQueries({ queryKey: ['members', org?.id] })
-    },
-    onError: () => toast('Errore durante l\'invito', 'error'),
-  })
-
-  const removeMember = useMutation({
-    mutationFn: async (member: OrgMember) => {
-      const { error } = await supabase
-        .from('org_members')
-        .delete()
-        .eq('org_id', member.org_id)
-        .eq('user_id', member.user_id)
-      if (error) throw error
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['members', org?.id] }),
-  })
-
-  const handleInvite = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!inviteEmail.trim()) return
-    invite.mutate({ email: inviteEmail, role: inviteRole })
-  }
+  const changeRole = (member: OrgMember, role: Role) => {
+    updateRole.mutate(
+      { userId: member.user_id, role },
+      { onError: () => toast.error(t("common.error")) },
+    );
+  };
 
   return (
     <div>
-      <PageHeader title="Membri del team" />
+      <PageHeader
+        title={t("members.title")}
+        subtitle={t("members.subtitle")}
+        actions={
+          <Button onClick={() => setInviteOpen(true)}>
+            <UserPlus className="h-4 w-4" />
+            {t("members.invite")}
+          </Button>
+        }
+      />
+      <SettingsTabs />
 
-      <div className="space-y-6 max-w-2xl">
-        <Card>
-          <h3 className="text-base font-semibold text-gray-900 mb-4">Membri attuali</h3>
-          <div className="space-y-3">
-            {(members ?? []).map((m) => (
-              <div key={m.user_id} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
-                    U
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{m.user_id}</p>
-                    <Badge variant={m.role === 'owner' ? 'draft' : 'draft'}>{roleLabels[m.role]}</Badge>
-                  </div>
-                </div>
-                {isOwner && m.user_id !== session?.user.id && m.role !== 'owner' && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeMember.mutate(m)}
-                    className="text-red-500"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            ))}
-          </div>
-        </Card>
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Spinner />
+        </div>
+      ) : (
+        <Table>
+          <THead>
+            <TR>
+              <TH>{t("members.email")}</TH>
+              <TH>{t("members.role")}</TH>
+              <TH>{t("common.actions")}</TH>
+            </TR>
+          </THead>
+          <TBody>
+            {(data ?? []).map((member) => {
+              const isSelf = member.user_id === user?.id;
+              return (
+                <TR key={member.user_id}>
+                  <TD>
+                    <div className="flex items-center gap-2">
+                      <Avatar name={member.user_id} />
+                      <span className="font-mono text-xs">{member.user_id.slice(0, 8)}</span>
+                      {isSelf ? <Badge variant="neutral">{t("members.you")}</Badge> : null}
+                    </div>
+                  </TD>
+                  <TD>
+                    <Select
+                      value={member.role}
+                      disabled={isSelf}
+                      onChange={(e) => changeRole(member, e.target.value as Role)}
+                      options={roleOptions}
+                    />
+                  </TD>
+                  <TD>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={isSelf}
+                      onClick={() => removeMember.mutate(member.user_id)}
+                    >
+                      {t("members.removeMember")}
+                    </Button>
+                  </TD>
+                </TR>
+              );
+            })}
+          </TBody>
+        </Table>
+      )}
 
-        {isOwner && (
-          <Card>
-            <h3 className="text-base font-semibold text-gray-900 mb-4">{t.btn_invite}</h3>
-            <form onSubmit={handleInvite} className="space-y-4">
-              <div className="flex gap-3">
-                <Input
-                  type="email"
-                  placeholder="email@azienda.it"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  className="flex-1"
-                />
-                <Select
-                  options={ROLE_OPTIONS}
-                  value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value as MemberRole)}
-                  className="w-36"
-                />
-              </div>
-              <Button type="submit" loading={invite.isPending}>
-                {t.btn_invite}
-              </Button>
-            </form>
-          </Card>
-        )}
-      </div>
+      <InviteMember orgId={orgId} open={inviteOpen} onClose={() => setInviteOpen(false)} />
     </div>
-  )
+  );
 }

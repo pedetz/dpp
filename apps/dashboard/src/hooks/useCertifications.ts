@@ -1,80 +1,67 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import type { Certification } from '@passaporto/shared'
-import { supabase } from '@/lib/supabase'
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { Certification } from "@passaporto/shared";
+import { supabase } from "@/lib/supabase";
 
-interface UploadCertificationInput {
-  productId: string
-  kind: string
-  file: File
-  validUntil?: string
+const BUCKET = "certifications";
+
+export function useCertifications(productId: string | undefined) {
+  return useQuery({
+    queryKey: ["certifications", productId],
+    enabled: Boolean(productId),
+    queryFn: async (): Promise<Certification[]> => {
+      const { data, error } = await supabase
+        .from("certifications")
+        .select("*")
+        .eq("product_id", productId!);
+      if (error) throw error;
+      return data;
+    },
+  });
 }
 
-export function useCertifications(productId: string) {
-  const qc = useQueryClient()
+export interface UploadCertInput {
+  productId: string;
+  kind: string;
+  validUntil: string | null;
+  file: File;
+}
 
-  const query = useQuery({
-    queryKey: ['certifications', productId],
-    enabled: !!productId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('certifications')
-        .select('*')
-        .eq('product_id', productId)
-        .order('id')
-      if (error) throw error
-      return data as Certification[]
+export function useUploadCertification() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ productId, kind, validUntil, file }: UploadCertInput) => {
+      const path = `${productId}/${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from(BUCKET)
+        .upload(path, file, { upsert: false });
+      if (uploadError) throw uploadError;
+      const { error } = await supabase.from("certifications").insert({
+        product_id: productId,
+        kind,
+        file_path: path,
+        valid_until: validUntil,
+      });
+      if (error) throw error;
     },
-  })
+    onSuccess: (_data, vars) =>
+      queryClient.invalidateQueries({ queryKey: ["certifications", vars.productId] }),
+  });
+}
 
-  const upload = useMutation({
-    mutationFn: async (input: UploadCertificationInput) => {
-      const ext = input.file.name.split('.').pop()
-      const path = `${input.productId}/${Date.now()}.${ext}`
-
-      const { error: storageError } = await supabase.storage
-        .from('certifications')
-        .upload(path, input.file)
-      if (storageError) throw storageError
-
-      const { data, error } = await supabase
-        .from('certifications')
-        .insert({
-          product_id: input.productId,
-          kind: input.kind,
-          file_path: path,
-          valid_until: input.validUntil ?? null,
-        })
-        .select()
-        .single()
-      if (error) throw error
-      return data as Certification
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['certifications', productId] }),
-  })
-
-  const remove = useMutation({
+export function useDeleteCertification(productId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
     mutationFn: async (cert: Certification) => {
-      const { error: storageError } = await supabase.storage
-        .from('certifications')
-        .remove([cert.file_path])
-      if (storageError) throw storageError
-
-      const { error } = await supabase
-        .from('certifications')
-        .delete()
-        .eq('id', cert.id)
-      if (error) throw error
+      await supabase.storage.from(BUCKET).remove([cert.file_path]);
+      const { error } = await supabase.from("certifications").delete().eq("id", cert.id);
+      if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['certifications', productId] }),
-  })
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["certifications", productId] }),
+  });
+}
 
-  const getSignedUrl = async (filePath: string): Promise<string> => {
-    const { data, error } = await supabase.storage
-      .from('certifications')
-      .createSignedUrl(filePath, 3600)
-    if (error) throw error
-    return data.signedUrl
-  }
-
-  return { ...query, upload, remove, getSignedUrl }
+export async function signedCertUrl(path: string): Promise<string | null> {
+  const { data } = await supabase.storage.from(BUCKET).createSignedUrl(path, 300);
+  return data?.signedUrl ?? null;
 }
