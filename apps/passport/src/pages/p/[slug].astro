@@ -12,18 +12,22 @@ import CountrySection from '@/components/sections/CountrySection.astro'
 import PercentSection from '@/components/sections/PercentSection.astro'
 import CareSection from '@/components/sections/CareSection.astro'
 import TextSection from '@/components/sections/TextSection.astro'
-import { getPassportByGtin, getVersionHistory } from '@/lib/passport'
+import { getPassportBySlug, getVersionHistory } from '@/lib/passport'
 import { getLang, getTranslation } from '@/lib/i18n'
 import type { FieldType } from '@/lib/fields'
 import { FIELD_KEYS } from '@/lib/fields'
 
 export const prerender = false
 
-const { gtin } = Astro.params as { gtin: string }
+const { slug } = Astro.params as { slug: string }
 
-const passport = await getPassportByGtin(gtin)
+const passport = await getPassportBySlug(slug)
 if (!passport) {
   return Astro.redirect('/404', 302)
+}
+
+if (passport.gtin) {
+  return Astro.redirect(`/01/${passport.gtin}`, 301)
 }
 
 const lang = getLang(Astro.url)

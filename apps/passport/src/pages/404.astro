@@ -1,48 +1,31 @@
 ---
-import PassportLayout from '@/layouts/PassportLayout.astro'
-
-Astro.response.status = 404
-Astro.response.headers.set('Cache-Control', 'public, s-maxage=60')
+export const prerender = false
 ---
 
-<PassportLayout
-  title="Passaporto non trovato"
-  description="Il QR code potrebbe essere danneggiato o il prodotto non è più disponibile."
-  lang="it"
->
-  <main class="min-h-screen flex items-center justify-center px-4 bg-gray-50">
-    <div class="max-w-md w-full text-center py-16">
-      <div class="flex justify-center mb-6">
-        <div class="w-24 h-24 rounded-2xl bg-[#1a4731] flex items-center justify-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="white"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="w-14 h-14"
-            aria-hidden="true"
-          >
-            <rect x="3" y="3" width="7" height="7" rx="1" />
-            <rect x="14" y="3" width="7" height="7" rx="1" />
-            <rect x="3" y="14" width="7" height="7" rx="1" />
-            <rect x="14" y="14" width="7" height="7" rx="1" />
-            <line x1="2" y1="2" x2="22" y2="22" />
-          </svg>
-        </div>
-      </div>
-      <h1 class="text-2xl font-bold text-[#1a4731] mb-3">Passaporto non trovato</h1>
-      <p class="text-gray-600 mb-8 leading-relaxed">
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Passaporto non trovato</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <style>
+      body { font-family: system-ui, -apple-system, sans-serif; background: #f9fafb; }
+    </style>
+  </head>
+  <body class="min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full text-center">
+      <div class="text-6xl mb-6">📦</div>
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Passaporto non trovato</h1>
+      <p class="text-gray-600 mb-6">
         Il QR code potrebbe essere danneggiato o il prodotto non è più disponibile.
       </p>
-      <a
-        href="/"
-        class="inline-flex items-center gap-2 bg-[#1a4731] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#2d7a50] transition-colors"
-      >
-        Torna alla home
-      </a>
+      <hr class="border-gray-200 mb-6" />
+      <h2 class="text-xl font-bold text-gray-900 mb-2">Passport not found</h2>
+      <p class="text-gray-500 text-sm">
+        The QR code may be damaged or the product is no longer available.
+      </p>
     </div>
-  </main>
-</PassportLayout>
+  </body>
+</html>

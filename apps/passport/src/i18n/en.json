@@ -4,6 +4,7 @@
   "version_label": "Version",
   "published_label": "Published on",
   "composition_title": "Fibre composition",
+  "composition": "Fibre composition",
   "country_weaving": "Country of weaving",
   "country_manufacture": "Country of manufacture",
   "recycled_content": "Recycled content",
@@ -11,10 +12,12 @@
   "end_of_life": "End of life instructions",
   "svhc_substances": "SVHC substances",
   "durability": "Durability and repairability",
+  "certifications": "Certifications",
   "certifications_title": "Certifications",
   "version_history": "Version history",
   "not_found_title": "Passport not found",
   "not_found_desc": "The QR code may be damaged or the product is no longer available.",
   "language_switch_label": "Language",
-  "cert_valid_until": "Valid until"
+  "cert_valid_until": "Valid until",
+  "go_home": "Back to home"
 }
