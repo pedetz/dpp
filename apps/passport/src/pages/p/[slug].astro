@@ -5,123 +5,127 @@ import ProductGallery from '@/components/ProductGallery.astro'
 import PassportMeta from '@/components/PassportMeta.astro'
 import LanguageSwitch from '@/components/LanguageSwitch.astro'
 import VersionHistory from '@/components/VersionHistory.astro'
-import CertificationsSection from '@/components/CertificationsSection.astro'
 import FieldSection from '@/components/sections/FieldSection.astro'
 import CompositionSection from '@/components/sections/CompositionSection.astro'
 import CountrySection from '@/components/sections/CountrySection.astro'
 import PercentSection from '@/components/sections/PercentSection.astro'
 import CareSection from '@/components/sections/CareSection.astro'
 import TextSection from '@/components/sections/TextSection.astro'
+import CertificationsSection from '@/components/sections/CertificationsSection.astro'
 import { getPassportBySlug, getVersionHistory } from '@/lib/passport'
 import { getLang, getTranslation } from '@/lib/i18n'
-import type { FieldType } from '@/lib/fields'
-import { FIELD_KEYS } from '@/lib/fields'
 
 export const prerender = false
 
-const { slug } = Astro.params as { slug: string }
+const { slug } = Astro.params
+const lang = getLang(Astro.url)
+
+if (!slug) {
+  return Astro.redirect('/404')
+}
 
 const passport = await getPassportBySlug(slug)
+
 if (!passport) {
-  return Astro.redirect('/404', 302)
+  return new Response(null, { status: 404, headers: { Location: '/404' } })
 }
 
 if (passport.gtin) {
-  return Astro.redirect(`/01/${passport.gtin}`, 301)
+  const redirectUrl = `/01/${passport.gtin}?lang=${lang}`
+  return Astro.redirect(redirectUrl, 301)
 }
 
-const lang = getLang(Astro.url)
 const versions = await getVersionHistory(passport.slug)
 
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600')
 
-interface FieldDef {
-  key: string
-  type: FieldType
-  label_it?: string
-  label_en?: string
-}
-
-const fields: FieldDef[] = FIELD_KEYS.map((key) => {
-  const raw = (passport.data as Record<string, unknown>)[`_field_${key}`]
-  if (raw && typeof raw === 'object' && 'type' in (raw as object)) {
-    return { key, ...(raw as object) } as FieldDef
-  }
-  return { key, type: 'textarea' as FieldType }
-})
-
-const certifications = Array.isArray((passport.data as Record<string, unknown>).certifications)
-  ? ((passport.data as Record<string, unknown>).certifications as { kind: string; valid_until?: string }[])
-  : []
+const d = passport.data
+const ogImage = passport.images?.[0] ?? undefined
+const title = `${passport.name} — ${passport.brand_name}`
+const description = `${getTranslation(lang, 'passport_title')} — ${passport.category}`
 ---
 
 <PassportLayout
-  title={`${passport.name} — ${getTranslation(lang, 'passport_title')}`}
-  description={`${getTranslation(lang, 'passport_title')} ${passport.brand_name}: ${passport.name}`}
-  ogImage={passport.images[0]}
+  title={title}
+  description={description}
+  ogImage={ogImage}
+  brandName={passport.brand_name}
+  category={passport.category}
   lang={lang}
 >
-  <BrandHeader brandName={passport.brand_name} logoUrl={passport.logo_url} lang={lang} />
+  <div class="min-h-screen bg-gray-50">
+    <BrandHeader brandName={passport.brand_name} logoUrl={passport.logo_url} lang={lang} />
 
-  <div class="max-w-2xl mx-auto px-4 py-2 flex items-center justify-between">
-    <PassportMeta version={passport.version} publishedAt={passport.published_at} lang={lang} />
-    <LanguageSwitch currentLang={lang} currentUrl={Astro.url} />
-  </div>
+    <div class="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">{passport.name}</h1>
+        <p class="text-sm text-gray-500 mt-0.5">{passport.category}</p>
+      </div>
+      <LanguageSwitch currentLang={lang} currentUrl={Astro.url} />
+    </div>
 
-  <ProductGallery images={passport.images} name={passport.name} />
+    <div class="max-w-2xl mx-auto px-4 mb-4">
+      <PassportMeta version={passport.version} publishedAt={passport.published_at} lang={lang} />
+    </div>
 
-  <main class="max-w-2xl mx-auto px-4 pb-8">
-    <h1 class="text-xl font-bold text-gray-900 mb-4">{passport.name}</h1>
+    <ProductGallery images={passport.images ?? []} name={passport.name} />
 
-    {FIELD_KEYS.map((key) => {
-      const value = (passport.data as Record<string, unknown>)[key]
-      if (value === null || value === undefined || value === '') return null
+    {d.composition && typeof d.composition === 'object' && !Array.isArray(d.composition) && (
+      <FieldSection title={getTranslation(lang, 'composition_title')}>
+        <CompositionSection data={d.composition as Record<string, number>} lang={lang} />
+      </FieldSection>
+    )}
 
-      const fieldDef = fields.find(f => f.key === key)
-      const type = fieldDef?.type ?? 'textarea'
-      const title = getTranslation(lang, key) !== key
-        ? getTranslation(lang, key)
-        : (lang === 'it' ? (fieldDef?.label_it ?? key) : (fieldDef?.label_en ?? key))
+    {d.country_weaving && typeof d.country_weaving === 'string' && (
+      <FieldSection title={getTranslation(lang, 'country_weaving')}>
+        <CountrySection countryCode={d.country_weaving} lang={lang} />
+      </FieldSection>
+    )}
 
-      if (type === 'composition') {
-        return (
-          <FieldSection title={title}>
-            <CompositionSection data={value as Record<string, number>} />
-          </FieldSection>
-        )
-      }
-      if (type === 'country') {
-        return (
-          <FieldSection title={title}>
-            <CountrySection countryCode={value as string} lang={lang} />
-          </FieldSection>
-        )
-      }
-      if (type === 'percent' || type === 'number') {
-        return (
-          <FieldSection title={title}>
-            <PercentSection value={Number(value)} label={title} />
-          </FieldSection>
-        )
-      }
-      if (type === 'care_symbols') {
-        return (
-          <FieldSection title={title}>
-            <CareSection symbols={value as string[]} />
-          </FieldSection>
-        )
-      }
-      return (
-        <FieldSection title={title}>
-          <TextSection text={String(value)} />
-        </FieldSection>
-      )
-    })}
+    {d.country_manufacture && typeof d.country_manufacture === 'string' && (
+      <FieldSection title={getTranslation(lang, 'country_manufacture')}>
+        <CountrySection countryCode={d.country_manufacture} lang={lang} />
+      </FieldSection>
+    )}
 
-    {certifications.length > 0 && (
-      <CertificationsSection certifications={certifications} lang={lang} />
+    {typeof d.recycled_content === 'number' && (
+      <FieldSection title={getTranslation(lang, 'recycled_content')}>
+        <PercentSection value={d.recycled_content} label={getTranslation(lang, 'recycled_content')} />
+      </FieldSection>
+    )}
+
+    {d.care_instructions && Array.isArray(d.care_instructions) && (
+      <FieldSection title={getTranslation(lang, 'care_instructions')}>
+        <CareSection symbols={d.care_instructions as string[]} lang={lang} />
+      </FieldSection>
+    )}
+
+    {d.end_of_life && typeof d.end_of_life === 'string' && (
+      <FieldSection title={getTranslation(lang, 'end_of_life')}>
+        <TextSection text={d.end_of_life} />
+      </FieldSection>
+    )}
+
+    {d.svhc_substances && typeof d.svhc_substances === 'string' && (
+      <FieldSection title={getTranslation(lang, 'svhc_substances')}>
+        <TextSection text={d.svhc_substances} />
+      </FieldSection>
+    )}
+
+    {d.durability && typeof d.durability === 'string' && (
+      <FieldSection title={getTranslation(lang, 'durability')}>
+        <TextSection text={d.durability} />
+      </FieldSection>
+    )}
+
+    {d.certifications && Array.isArray(d.certifications) && (
+      <FieldSection title={getTranslation(lang, 'certifications_title')}>
+        <CertificationsSection certifications={d.certifications as Array<{ type: string; valid_until?: string }>} lang={lang} />
+      </FieldSection>
     )}
 
     <VersionHistory versions={versions} lang={lang} />
-  </main>
+
+    <div class="pb-8" />
+  </div>
 </PassportLayout>
