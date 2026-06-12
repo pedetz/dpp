@@ -31,8 +31,7 @@ if (!passport) {
 }
 
 if (passport.gtin) {
-  const redirectUrl = `/01/${passport.gtin}?lang=${lang}`
-  return Astro.redirect(redirectUrl, 301)
+  return Astro.redirect(`/01/${passport.gtin}?lang=${lang}`, 301)
 }
 
 const versions = await getVersionHistory(passport.slug)
