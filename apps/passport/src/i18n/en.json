@@ -19,5 +19,7 @@
   "not_found_desc": "The QR code may be damaged or the product is no longer available.",
   "language_switch_label": "Language",
   "cert_valid_until": "Valid until",
-  "go_home": "Back to home"
+  "go_home": "Back to home",
+  "qr_code_title": "QR Code",
+  "download_qr": "Download QR"
 }
