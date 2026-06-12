@@ -1,0 +1,270 @@
+---
+import Layout from '../layouts/Layout.astro'
+import Navbar from '../components/Navbar.astro'
+import Footer from '../components/Footer.astro'
+
+const dashboardUrl = import.meta.env.PUBLIC_DASHBOARD_URL || '#'
+
+const plans = [
+  {
+    id: 'trial',
+    name: 'Trial',
+    price: 'Gratis',
+    period: '',
+    passports: '3',
+    description: 'Per esplorare la piattaforma senza impegno',
+    highlight: false,
+    features: {
+      passports: '3 passaporti',
+      brands: '1 brand',
+      languages: 'IT + EN',
+      qrcode: true,
+      analytics: false,
+      customDomain: false,
+      apiAccess: false,
+      support: 'Community',
+      sso: false,
+      bulkImport: false,
+      whiteLabel: false,
+      dedicatedManager: false,
+    },
+  },
+  {
+    id: 'starter',
+    name: 'Starter',
+    price: '€49',
+    period: '/mese',
+    passports: '100',
+    description: 'Per piccoli brand che iniziano il percorso ESPR',
+    highlight: false,
+    features: {
+      passports: '100 passaporti',
+      brands: '1 brand',
+      languages: 'IT + EN',
+      qrcode: true,
+      analytics: true,
+      customDomain: false,
+      apiAccess: false,
+      support: 'Email',
+      sso: false,
+      bulkImport: false,
+      whiteLabel: false,
+      dedicatedManager: false,
+    },
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    price: '€149',
+    period: '/mese',
+    passports: '1.000',
+    description: 'Per brand in crescita con più prodotti',
+    highlight: true,
+    features: {
+      passports: '1.000 passaporti',
+      brands: '3 brand',
+      languages: 'IT + EN + FR + DE',
+      qrcode: true,
+      analytics: true,
+      customDomain: true,
+      apiAccess: true,
+      support: 'Priorità',
+      sso: false,
+      bulkImport: true,
+      whiteLabel: false,
+      dedicatedManager: false,
+    },
+  },
+  {
+    id: 'filiera',
+    name: 'Filiera',
+    price: '€399',
+    period: '/mese',
+    passports: 'Illimitati',
+    description: 'Per grandi filiere produttive e distributori',
+    highlight: false,
+    features: {
+      passports: 'Illimitati',
+      brands: 'Illimitati',
+      languages: 'Tutte',
+      qrcode: true,
+      analytics: true,
+      customDomain: true,
+      apiAccess: true,
+      support: 'Dedicato',
+      sso: true,
+      bulkImport: true,
+      whiteLabel: true,
+      dedicatedManager: true,
+    },
+  },
+]
+
+const featureRows = [
+  { key: 'passports', label: 'Passaporti digitali' },
+  { key: 'brands', label: 'Brand' },
+  { key: 'languages', label: 'Lingue' },
+  { key: 'qrcode', label: 'QR code GS1', boolean: true },
+  { key: 'analytics', label: 'Analytics', boolean: true },
+  { key: 'customDomain', label: 'Dominio personalizzato', boolean: true },
+  { key: 'apiAccess', label: 'Accesso API', boolean: true },
+  { key: 'bulkImport', label: 'Import massivo CSV', boolean: true },
+  { key: 'whiteLabel', label: 'White-label', boolean: true },
+  { key: 'sso', label: 'Single Sign-On (SSO)', boolean: true },
+  { key: 'dedicatedManager', label: 'Account manager dedicato', boolean: true },
+  { key: 'support', label: 'Supporto' },
+]
+---
+
+<Layout title="Prezzi" description="Piani e prezzi di Passaporto. Inizia gratis con 3 passaporti digitali.">
+  <Navbar />
+
+  <main>
+    <!-- Header -->
+    <section class="py-20 bg-gradient-to-b from-primary-50 to-white">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-4">
+          Prezzi semplici e trasparenti
+        </h1>
+        <p class="text-xl text-gray-500 max-w-2xl mx-auto">
+          Inizia gratis. Scala quando cresci. Nessun costo nascosto.
+        </p>
+      </div>
+    </section>
+
+    <!-- Plan cards -->
+    <section class="py-12 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+          {plans.map((plan) => (
+            <div class={`relative bg-white rounded-2xl p-6 border transition-all ${plan.highlight ? 'border-primary-300 shadow-primary-100 shadow-xl ring-2 ring-primary-200' : 'border-gray-200 shadow-sm hover:shadow-md'}`}>
+              {plan.highlight && (
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span class="bg-primary-600 text-white text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">Più popolare</span>
+                </div>
+              )}
+
+              <div class="mb-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-1">{plan.name}</h2>
+                <p class="text-sm text-gray-500 min-h-[40px]">{plan.description}</p>
+              </div>
+
+              <div class="mb-6">
+                <div class="flex items-end gap-1">
+                  <span class={`text-4xl font-extrabold ${plan.highlight ? 'text-primary-600' : 'text-gray-900'}`}>{plan.price}</span>
+                  {plan.period && <span class="text-gray-400 mb-1">{plan.period}</span>}
+                </div>
+                <p class="text-sm text-gray-500 mt-1">{plan.features.passports}</p>
+              </div>
+
+              <a
+                href={dashboardUrl}
+                class={`block text-center py-3 px-4 rounded-xl text-sm font-bold transition-all ${plan.highlight ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                {plan.id === 'trial' ? 'Inizia gratis' : `Attiva ${plan.name}`}
+              </a>
+            </div>
+          ))}
+        </div>
+
+        <!-- Feature comparison table -->
+        <div class="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-gray-50 border-b border-gray-200">
+                <th class="text-left p-4 font-semibold text-gray-700 w-1/3">Funzionalità</th>
+                {plans.map((plan) => (
+                  <th class={`p-4 text-center font-bold ${plan.highlight ? 'text-primary-600 bg-primary-50' : 'text-gray-700'}`}>
+                    {plan.name}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              {featureRows.map((row, rowIdx) => (
+                <tr class={rowIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
+                  <td class="p-4 font-medium text-gray-700">{row.label}</td>
+                  {plans.map((plan) => {
+                    const value = plan.features[row.key as keyof typeof plan.features]
+                    return (
+                      <td class={`p-4 text-center ${plan.highlight ? 'bg-primary-50/30' : ''}`}>
+                        {row.boolean ? (
+                          value ? (
+                            <svg class="w-5 h-5 text-accent-500 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                            </svg>
+                          ) : (
+                            <svg class="w-5 h-5 text-gray-300 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                            </svg>
+                          )
+                        ) : (
+                          <span class="text-gray-700 font-medium">{value as string}</span>
+                        )}
+                      </td>
+                    )
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="py-20 bg-gray-50">
+      <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-12 text-center">Domande frequenti</h2>
+        <div class="space-y-6">
+          {[
+            {
+              q: "Posso cambiare piano in qualsiasi momento?",
+              a: "Sì, puoi upgradare o fare downgrade del tuo piano in qualsiasi momento. Le modifiche saranno effettive immediatamente."
+            },
+            {
+              q: "Cosa succede ai miei passaporti se supero il limite?",
+              a: "Riceverai una notifica quando ti avvicini al limite. I passaporti esistenti resteranno attivi, ma non potrai crearne di nuovi fino all'upgrade."
+            },
+            {
+              q: "Il piano Trial ha una scadenza?",
+              a: "No, il piano Trial è permanente. Puoi usare 3 passaporti gratis per sempre, senza carta di credito."
+            },
+            {
+              q: "Offrite sconti per pagamento annuale?",
+              a: "Sì! Scegliendo il pagamento annuale risparmi il 20% rispetto al mensile. Contattaci per maggiori dettagli."
+            },
+            {
+              q: "I passaporti rimangono accessibili dopo la cancellazione?",
+              a: "In caso di cancellazione, i tuoi passaporti pubblici resteranno accessibili per 30 giorni per permettere il reindirizzamento."
+            }
+          ].map((faq) => (
+            <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+              <h3 class="text-lg font-semibold text-gray-900 mb-2">{faq.q}</h3>
+              <p class="text-gray-500">{faq.a}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="py-16 bg-primary-600">
+      <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-3xl font-bold text-white mb-4">Inizia il tuo percorso ESPR oggi</h2>
+        <p class="text-primary-200 mb-8 text-lg">3 passaporti gratis, nessuna carta di credito richiesta.</p>
+        <a
+          href={dashboardUrl}
+          class="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary-600 text-lg font-bold rounded-xl hover:bg-primary-50 transition-all shadow-lg hover:scale-105"
+        >
+          Inizia gratis
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>

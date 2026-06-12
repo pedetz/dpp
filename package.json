@@ -7,7 +7,8 @@
     "dev:passport": "turbo run dev --filter=@passaporto/web",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
-    "gen:types": "supabase gen types typescript --local > packages/shared/src/types/database.ts"
+    "gen:types": "supabase gen types typescript --local > packages/shared/src/types/database.ts",
+    "landing": "turbo run dev --filter=@passaporto/landing"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

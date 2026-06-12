@@ -1,0 +1,434 @@
+---
+import Layout from '../layouts/Layout.astro'
+import Navbar from '../components/Navbar.astro'
+import Footer from '../components/Footer.astro'
+
+const dashboardUrl = import.meta.env.PUBLIC_DASHBOARD_URL || '#'
+
+const steps = [
+  {
+    number: '01',
+    title: 'Crea il tuo brand',
+    description: 'Registra la tua azienda e personalizza il profilo con logo e colori del tuo brand.',
+    icon: 'building',
+  },
+  {
+    number: '02',
+    title: 'Aggiungi i prodotti',
+    description: 'Inserisci le informazioni del prodotto: materiali, fornitori, certificazioni e istruzioni di cura.',
+    icon: 'tag',
+  },
+  {
+    number: '03',
+    title: 'Pubblica il passaporto',
+    description: 'Genera automaticamente il QR code GS1 e condividi il passaporto digitale con i tuoi clienti.',
+    icon: 'qr-code',
+  },
+]
+
+const features = [
+  {
+    title: 'Conformità ESPR',
+    description: 'Rispetta il Regolamento UE sulla Sostenibilità dei Prodotti fin dal lancio. Sempre aggiornato alle normative.',
+    icon: 'shield-check',
+    color: 'blue',
+  },
+  {
+    title: 'QR codes GS1',
+    description: 'Standard internazionale, compatibile con tutti i lettori. I tuoi clienti possono scansionare da qualsiasi dispositivo.',
+    icon: 'qr-code',
+    color: 'green',
+  },
+  {
+    title: 'Multilingua IT/EN',
+    description: 'Passaporti leggibili in italiano e inglese. Pronto per mercati internazionali.',
+    icon: 'globe',
+    color: 'purple',
+  },
+]
+
+const demoProducts = [
+  { slug: 'maglione-merino-demo', name: 'Maglione Merino', category: 'Maglieria', color: 'from-blue-50 to-blue-100', accent: 'text-blue-600' },
+  { slug: 'jeans-biologici-demo', name: 'Jeans Biologici', category: 'Denim', color: 'from-indigo-50 to-indigo-100', accent: 'text-indigo-600' },
+  { slug: 'scarpa-vegana-demo', name: 'Scarpa Vegana', category: 'Calzature', color: 'from-green-50 to-green-100', accent: 'text-green-600' },
+]
+
+const plans = [
+  {
+    id: 'trial',
+    name: 'Trial',
+    price: 'Gratis',
+    period: '',
+    passports: '3 passaporti',
+    description: 'Prova senza impegno',
+    highlight: false,
+  },
+  {
+    id: 'starter',
+    name: 'Starter',
+    price: '€49',
+    period: '/mese',
+    passports: '100 passaporti',
+    description: 'Per piccoli brand',
+    highlight: false,
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    price: '€149',
+    period: '/mese',
+    passports: '1.000 passaporti',
+    description: 'Per brand in crescita',
+    highlight: true,
+  },
+  {
+    id: 'filiera',
+    name: 'Filiera',
+    price: '€399',
+    period: '/mese',
+    passports: 'Illimitati',
+    description: 'Per grandi filiere',
+    highlight: false,
+  },
+]
+---
+
+<Layout title="Il tuo primo passaporto digitale in 10 minuti">
+  <Navbar />
+
+  <!-- Hero Section -->
+  <section class="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-accent-50 pt-16 pb-24">
+    <!-- Background decoration -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute -top-40 -right-32 w-96 h-96 bg-primary-100 rounded-full opacity-40 blur-3xl"></div>
+      <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-accent-100 rounded-full opacity-40 blur-3xl"></div>
+    </div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <!-- Hero Text -->
+        <div class="space-y-8">
+          <div class="inline-flex items-center gap-2 bg-accent-50 border border-accent-200 rounded-full px-4 py-1.5 text-sm font-medium text-accent-700">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+            </svg>
+            Pronto per ESPR 2027
+          </div>
+
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight">
+            Il tuo primo passaporto digitale in
+            <span class="text-primary-600"> 10 minuti</span>
+          </h1>
+
+          <p class="text-xl text-gray-600 leading-relaxed max-w-lg">
+            Conformità ESPR 2027 senza burocrazia. Crea, pubblica e condividi il passaporto digitale dei tuoi prodotti tessili.
+          </p>
+
+          <div class="flex flex-col sm:flex-row gap-4">
+            <a
+              href={dashboardUrl}
+              class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary-600 text-white text-lg font-semibold rounded-xl hover:bg-primary-700 transition-all shadow-lg hover:shadow-primary-200 hover:scale-105"
+            >
+              Inizia gratis
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </a>
+            <a
+              href="/demo"
+              class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-gray-700 text-lg font-semibold rounded-xl border-2 border-gray-200 hover:border-primary-300 hover:text-primary-600 transition-all"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Guarda la demo
+            </a>
+          </div>
+
+          <div class="flex items-center gap-6 text-sm text-gray-500">
+            <div class="flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-accent-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+              </svg>
+              Nessuna carta di credito
+            </div>
+            <div class="flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-accent-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+              </svg>
+              3 passaporti gratis
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero Passport Preview Card -->
+        <div class="relative flex justify-center lg:justify-end">
+          <div class="relative w-full max-w-sm">
+            <!-- Decorative card behind -->
+            <div class="absolute top-4 left-4 w-full h-full bg-primary-100 rounded-2xl rotate-3"></div>
+            <div class="absolute top-2 left-2 w-full h-full bg-accent-100 rounded-2xl -rotate-2"></div>
+
+            <!-- Main passport card -->
+            <div class="relative bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+              <!-- Card header -->
+              <div class="flex items-center justify-between mb-5">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="text-xs text-gray-500 font-medium">Passaporto Digitale</p>
+                    <p class="text-sm font-bold text-gray-900">EU DPP · ESPR 2027</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1 bg-accent-50 rounded-full px-2.5 py-1">
+                  <div class="w-1.5 h-1.5 bg-accent-500 rounded-full animate-pulse"></div>
+                  <span class="text-xs font-medium text-accent-700">Conforme</span>
+                </div>
+              </div>
+
+              <!-- Product image placeholder -->
+              <div class="w-full h-40 bg-gradient-to-br from-primary-50 to-accent-50 rounded-xl mb-5 flex items-center justify-center">
+                <svg class="w-16 h-16 text-primary-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+
+              <!-- Product info -->
+              <div class="space-y-3">
+                <div>
+                  <p class="text-xs text-gray-400 uppercase tracking-wider font-medium">Prodotto</p>
+                  <p class="text-lg font-bold text-gray-900">Maglione Merino 100%</p>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="bg-gray-50 rounded-lg p-3">
+                    <p class="text-xs text-gray-400 font-medium">Materiale</p>
+                    <p class="text-sm font-semibold text-gray-700">Lana Merino</p>
+                  </div>
+                  <div class="bg-gray-50 rounded-lg p-3">
+                    <p class="text-xs text-gray-400 font-medium">Origine</p>
+                    <p class="text-sm font-semibold text-gray-700">Italia 🇮🇹</p>
+                  </div>
+                </div>
+
+                <!-- QR code placeholder -->
+                <div class="flex items-center justify-between pt-2">
+                  <div class="space-y-1">
+                    <p class="text-xs text-gray-400 font-medium">Scansiona per i dettagli</p>
+                    <p class="text-xs text-gray-500">GS1 Digital Link</p>
+                  </div>
+                  <div class="w-14 h-14 bg-gray-900 rounded-lg flex items-center justify-center">
+                    <svg class="w-10 h-10 text-white" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M3 3h7v7H3V3zm2 2v3h3V5H5zm8-2h7v7h-7V3zm2 2v3h3V5h-3zM3 13h7v7H3v-7zm2 2v3h3v-3H5zm13 0h2v2h-2v-2zm-4-2h2v2h-2v-2zm4 4h2v2h-2v-2zm-6 0h2v2h-2v-2zm0 4h2v2h-2v-2zm4-4h2v6h-2v-2h-2v-2h2v-2z"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="come-funziona" class="py-24 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Come funziona</h2>
+        <p class="text-xl text-gray-500 max-w-2xl mx-auto">Tre semplici passi per essere conforme all'ESPR 2027</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+        <!-- Connector line -->
+        <div class="hidden md:block absolute top-10 left-1/3 right-1/3 h-0.5 bg-gradient-to-r from-primary-200 to-primary-200"></div>
+
+        {steps.map((step) => (
+          <div class="relative flex flex-col items-center text-center p-6">
+            <!-- Step number badge -->
+            <div class="relative mb-6">
+              <div class="w-20 h-20 bg-primary-50 rounded-2xl flex items-center justify-center shadow-sm border border-primary-100">
+                {step.icon === 'building' && (
+                  <svg class="w-9 h-9 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                )}
+                {step.icon === 'tag' && (
+                  <svg class="w-9 h-9 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                )}
+                {step.icon === 'qr-code' && (
+                  <svg class="w-9 h-9 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                  </svg>
+                )}
+              </div>
+              <span class="absolute -top-2 -right-2 w-7 h-7 bg-primary-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow">
+                {step.number.replace('0', '')}
+              </span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-3">{step.title}</h3>
+            <p class="text-gray-500 leading-relaxed">{step.description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="funzionalita" class="py-24 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Tutto quello che ti serve</h2>
+        <p class="text-xl text-gray-500 max-w-2xl mx-auto">Funzionalità pensate per le PMI tessili italiane</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {features.map((feature) => (
+          <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div class={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 ${feature.color === 'blue' ? 'bg-primary-50' : feature.color === 'green' ? 'bg-accent-50' : 'bg-purple-50'}`}>
+              {feature.icon === 'shield-check' && (
+                <svg class={`w-7 h-7 ${feature.color === 'blue' ? 'text-primary-600' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              )}
+              {feature.icon === 'qr-code' && (
+                <svg class={`w-7 h-7 ${feature.color === 'green' ? 'text-accent-600' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                </svg>
+              )}
+              {feature.icon === 'globe' && (
+                <svg class="w-7 h-7 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
+            <p class="text-gray-500 leading-relaxed">{feature.description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Demo Products -->
+  <section class="py-24 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Vedi come appare un passaporto</h2>
+        <p class="text-xl text-gray-500 max-w-2xl mx-auto">Esplora esempi reali di passaporti digitali per prodotti tessili</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        {demoProducts.map((product) => (
+          <a
+            href={`/p/${product.slug}`}
+            class="group block bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 overflow-hidden"
+          >
+            <div class={`h-48 bg-gradient-to-br ${product.color} flex items-center justify-center`}>
+              <svg class={`w-20 h-20 ${product.accent} opacity-30`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div class="p-5">
+              <div class="flex items-center justify-between mb-2">
+                <span class={`text-xs font-semibold uppercase tracking-wider ${product.accent}`}>{product.category}</span>
+                <span class="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">Demo</span>
+              </div>
+              <h3 class="text-lg font-bold text-gray-900 group-hover:text-primary-600 transition-colors">{product.name}</h3>
+              <div class="flex items-center gap-1 mt-3 text-sm text-primary-600 font-medium">
+                Vedi passaporto
+                <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Teaser -->
+  <section class="py-24 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Prezzi trasparenti</h2>
+        <p class="text-xl text-gray-500 max-w-2xl mx-auto">Parti gratis, scala quando cresci</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {plans.map((plan) => (
+          <div class={`relative bg-white rounded-2xl p-6 border transition-all hover:shadow-lg ${plan.highlight ? 'border-primary-300 shadow-primary-100 shadow-lg ring-2 ring-primary-200' : 'border-gray-100 shadow-sm'}`}>
+            {plan.highlight && (
+              <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span class="bg-primary-600 text-white text-xs font-bold px-3 py-1 rounded-full">Più popolare</span>
+              </div>
+            )}
+            <div class="mb-5">
+              <h3 class="text-lg font-bold text-gray-900 mb-1">{plan.name}</h3>
+              <p class="text-sm text-gray-500">{plan.description}</p>
+            </div>
+            <div class="mb-5">
+              <div class="flex items-end gap-1">
+                <span class={`text-3xl font-extrabold ${plan.highlight ? 'text-primary-600' : 'text-gray-900'}`}>{plan.price}</span>
+                {plan.period && <span class="text-gray-400 mb-1 text-sm">{plan.period}</span>}
+              </div>
+              <p class="text-sm text-gray-500 mt-1">{plan.passports}</p>
+            </div>
+            <a
+              href={dashboardUrl}
+              class={`block text-center py-2.5 px-4 rounded-lg text-sm font-semibold transition-colors ${plan.highlight ? 'bg-primary-600 text-white hover:bg-primary-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            >
+              {plan.id === 'trial' ? 'Inizia gratis' : 'Scegli piano'}
+            </a>
+          </div>
+        ))}
+      </div>
+
+      <div class="text-center mt-10">
+        <a href="/prezzi" class="inline-flex items-center gap-2 text-primary-600 font-semibold hover:text-primary-700 transition-colors">
+          Confronta tutti i piani nel dettaglio
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Banner -->
+  <section class="py-20 bg-gradient-to-br from-primary-600 to-primary-800">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+        Pronto per la conformità ESPR 2027?
+      </h2>
+      <p class="text-xl text-primary-200 mb-8 max-w-2xl mx-auto">
+        Unisciti alle PMI tessili italiane che si stanno preparando per il futuro sostenibile.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a
+          href={dashboardUrl}
+          class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-primary-600 text-lg font-bold rounded-xl hover:bg-primary-50 transition-all shadow-lg hover:scale-105"
+        >
+          Inizia gratis oggi
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </a>
+        <a
+          href="/demo"
+          class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary-500 text-white text-lg font-semibold rounded-xl border-2 border-primary-400 hover:bg-primary-400 transition-all"
+        >
+          Guarda la demo
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</Layout>

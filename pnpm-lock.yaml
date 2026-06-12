@@ -100,6 +100,28 @@ importers:
         specifier: ^5.3.4
         version: 5.4.21(@types/node@22.19.21)
 
+  apps/landing:
+    dependencies:
+      '@astrojs/tailwind':
+        specifier: ^5.1.3
+        version: 5.1.5(astro@4.16.19(@types/node@22.19.21)(rollup@4.61.1)(typescript@5.9.3))(tailwindcss@3.4.19(yaml@2.9.0))
+      astro:
+        specifier: ^4.16.18
+        version: 4.16.19(@types/node@22.19.21)(rollup@4.61.1)(typescript@5.9.3)
+      tailwindcss:
+        specifier: ^3.4.17
+        version: 3.4.19(yaml@2.9.0)
+    devDependencies:
+      '@astrojs/check':
+        specifier: ^0.9.0
+        version: 0.9.9(prettier@3.8.4)(typescript@5.9.3)
+      '@types/node':
+        specifier: ^22.10.6
+        version: 22.19.21
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
   apps/passport:
     dependencies:
       '@astrojs/node':
