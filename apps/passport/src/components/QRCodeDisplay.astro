@@ -1,0 +1,36 @@
+---
+import type { Lang } from '@/lib/i18n'
+import { getTranslation } from '@/lib/i18n'
+
+interface Props {
+  canonicalPath: string
+  lang: Lang
+}
+
+const { canonicalPath, lang } = Astro.props
+
+const canonicalUrl = `https://dpp.app${canonicalPath}`
+const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(canonicalUrl)}`
+
+const title = getTranslation(lang, 'qr_code_title')
+const downloadLabel = getTranslation(lang, 'download_qr')
+---
+
+<div class="max-w-2xl mx-auto px-4 py-4 flex flex-col items-center gap-2">
+  <p class="text-sm font-medium text-gray-700">{title}</p>
+  <img
+    src={qrApiUrl}
+    alt={title}
+    width="150"
+    height="150"
+    loading="lazy"
+    class="rounded border border-gray-200 shadow-sm"
+  />
+  <a
+    href={qrApiUrl}
+    download="qrcode.png"
+    class="text-xs text-[#2d7a50] underline hover:text-[#1a4731] transition-colors"
+  >
+    {downloadLabel}
+  </a>
+</div>

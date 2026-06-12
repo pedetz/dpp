@@ -5,3 +5,5 @@ dist
 supabase/.branches
 supabase/.temp
 .claude/
+.astro/
+*.tsbuildinfo

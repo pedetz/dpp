@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Package, QrCode, Settings, CreditCard } from "lucide-react";
+import { LayoutDashboard, Package, QrCode, Settings, CreditCard } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { t } from "@/i18n";
@@ -11,6 +11,7 @@ interface NavItem {
 }
 
 const items: NavItem[] = [
+  { to: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
   { to: "/products", label: t("nav.products"), icon: Package },
   { to: "/qr", label: t("nav.qr"), icon: QrCode },
   { to: "/settings", label: t("nav.settings"), icon: Settings },

@@ -6,7 +6,7 @@ interface Props {
   lang: Lang
 }
 
-const { data } = Astro.props
+const { data, lang } = Astro.props
 
 const palette = [
   '#2d7a50',
@@ -20,9 +20,15 @@ const palette = [
 ]
 
 const entries = Object.entries(data).filter(([, v]) => typeof v === 'number' && v > 0)
+
+const ariaLabel = entries.map(([fiber, pct]) => `${fiber.replace(/_/g, ' ')} ${pct}%`).join(', ')
 ---
 
-<div class="space-y-2">
+<div
+  class="space-y-2"
+  role="img"
+  aria-label={ariaLabel}
+>
   {entries.map(([fiber, pct], i) => (
     <div>
       <div class="flex justify-between text-sm mb-1">

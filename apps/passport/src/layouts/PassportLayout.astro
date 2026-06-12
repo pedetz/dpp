@@ -8,25 +8,48 @@ interface Props {
   brandName: string
   category: string
   lang: Lang
+  gtin?: string | null
+  slug?: string
+  canonicalUrl?: string
 }
 
-const { title, description, ogImage, brandName, category, lang } = Astro.props
+const { title, description, ogImage, brandName, category, lang, gtin, slug, canonicalUrl } = Astro.props
 
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600')
+
+const canonical = canonicalUrl ?? (gtin ? `/01/${gtin}` : slug ? `/p/${slug}` : undefined)
+const ogLocale = lang === 'it' ? 'it_IT' : 'en_GB'
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: title,
+  brand: {
+    '@type': 'Brand',
+    name: brandName,
+  },
+  description: description,
+  ...(ogImage ? { image: ogImage } : {}),
+  ...(canonical ? { url: `https://dpp.app${canonical}` } : {}),
+}
 ---
 
 <!doctype html>
 <html lang={lang}>
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta property="og:title" content={`${title} — ${brandName}`} />
-    <meta property="og:description" content={`Digital Product Passport — ${category}`} />
+    <meta name="robots" content="index, follow" />
+    {canonical && <link rel="canonical" href={`https://dpp.app${canonical}`} />}
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
     <meta property="og:type" content="product" />
+    <meta property="og:locale" content={ogLocale} />
     {ogImage && <meta property="og:image" content={ogImage} />}
-    <meta name="robots" content="noindex, nofollow" />
+    {canonical && <meta property="og:url" content={`https://dpp.app${canonical}`} />}
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <style>
       body {
