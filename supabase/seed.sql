@@ -133,3 +133,93 @@ insert into passport_versions (product_id, version, data, published_at) values (
   }'::jsonb,
   now()
 );
+
+-- ============================================================
+-- Second demo brand: Filiera Italiana Srl (filiera plan)
+-- Demonstrates unlimited passport publishing.
+-- org id  : 00000000-0000-0000-0000-000000000020
+-- products: 00000000-0000-0000-0000-0000000002xx
+-- ============================================================
+
+insert into organizations (id, name, vat_number, plan) values (
+  '00000000-0000-0000-0000-000000000020',
+  'Filiera Italiana Srl',
+  'IT98765432101',
+  'filiera'
+);
+
+insert into products (id, org_id, sku, gtin, name, category, slug, status, data, images, current_version) values (
+  '00000000-0000-0000-0000-000000000201',
+  '00000000-0000-0000-0000-000000000020',
+  'FIL-CAM-001',
+  '8098765432001',
+  'Camicia Lino Toscano',
+  'tessile',
+  'camicia-lino-toscano',
+  'published',
+  '{
+    "composizione": {"lino": 100},
+    "paese_tessitura": "IT",
+    "paese_confezione": "IT",
+    "contenuto_riciclato": 0,
+    "istruzioni_cura": ["lavare_a_30", "stirare_media_temperatura", "non_candeggiare"],
+    "smaltimento": "Interamente biodegradabile. Compostabile al termine del ciclo vita.",
+    "svhc": "Nessuna sostanza SVHC dichiarata.",
+    "durabilita": "Tessuto rinforzato alle spalle. Durata stimata 7 anni con cura appropriata."
+  }'::jsonb,
+  ARRAY['https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=800'],
+  1
+),
+(
+  '00000000-0000-0000-0000-000000000202',
+  '00000000-0000-0000-0000-000000000020',
+  'FIL-GIA-001',
+  '8098765432002',
+  'Giacca Lana Cotta Trentina',
+  'tessile',
+  'giacca-lana-cotta-trentina',
+  'published',
+  '{
+    "composizione": {"lana_vergine": 95, "poliammide": 5},
+    "paese_tessitura": "IT",
+    "paese_confezione": "IT",
+    "contenuto_riciclato": 20,
+    "istruzioni_cura": ["lavaggio_a_mano", "non_centrifugare", "asciugare_in_piano"],
+    "smaltimento": "Conferire al servizio raccolta indumenti usati. Lana riciclabile in filati tecnici.",
+    "svhc": "Nessuna sostanza SVHC dichiarata.",
+    "durabilita": "Lana cotta estremamente resistente all abrasione. Durata stimata 15 anni."
+  }'::jsonb,
+  ARRAY['https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800'],
+  1
+);
+
+insert into passport_versions (product_id, version, data, published_at) values (
+  '00000000-0000-0000-0000-000000000201',
+  1,
+  '{
+    "composizione": {"lino": 100},
+    "paese_tessitura": "IT",
+    "paese_confezione": "IT",
+    "contenuto_riciclato": 0,
+    "istruzioni_cura": ["lavare_a_30", "stirare_media_temperatura", "non_candeggiare"],
+    "smaltimento": "Interamente biodegradabile. Compostabile al termine del ciclo vita.",
+    "svhc": "Nessuna sostanza SVHC dichiarata.",
+    "durabilita": "Tessuto rinforzato alle spalle. Durata stimata 7 anni con cura appropriata."
+  }'::jsonb,
+  now()
+),
+(
+  '00000000-0000-0000-0000-000000000202',
+  1,
+  '{
+    "composizione": {"lana_vergine": 95, "poliammide": 5},
+    "paese_tessitura": "IT",
+    "paese_confezione": "IT",
+    "contenuto_riciclato": 20,
+    "istruzioni_cura": ["lavaggio_a_mano", "non_centrifugare", "asciugare_in_piano"],
+    "smaltimento": "Conferire al servizio raccolta indumenti usati. Lana riciclabile in filati tecnici.",
+    "svhc": "Nessuna sostanza SVHC dichiarata.",
+    "durabilita": "Lana cotta estremamente resistente all abrasione. Durata stimata 15 anni."
+  }'::jsonb,
+  now()
+);
