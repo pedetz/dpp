@@ -1,10 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { Plus, Upload } from "lucide-react";
+import { Plus, Upload, Package } from "lucide-react";
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Spinner } from "@/components/ui/Spinner";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { ProductList } from "@/components/products/ProductList";
 import { ImportCSV } from "@/components/products/ImportCSV";
 import { useOrg } from "@/hooks/useOrg";
@@ -62,6 +63,18 @@ export function ProductsPage() {
         <div className="flex justify-center py-12">
           <Spinner />
         </div>
+      ) : count === 0 ? (
+        <EmptyState
+          icon={Package}
+          title={t("products.emptyFirstTitle")}
+          description={t("products.emptyFirstDescription")}
+          action={
+            <Button onClick={handleNew}>
+              <Plus className="h-4 w-4" />
+              {t("products.new")}
+            </Button>
+          }
+        />
       ) : (
         <ProductList products={data ?? []} />
       )}

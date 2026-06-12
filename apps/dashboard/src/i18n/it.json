@@ -31,6 +31,7 @@
     "retry": "Riprova"
   },
   "nav": {
+    "dashboard": "Dashboard",
     "products": "Prodotti",
     "qr": "QR / Etichette",
     "settings": "Impostazioni",
@@ -90,7 +91,9 @@
     "saveDraft": "Salva bozza",
     "createdToast": "Prodotto creato",
     "updatedToast": "Prodotto aggiornato",
-    "deletedToast": "Prodotto eliminato"
+    "deletedToast": "Prodotto eliminato",
+    "emptyFirstTitle": "Nessun prodotto ancora",
+    "emptyFirstDescription": "Inizia aggiungendo il tuo primo prodotto tessile"
   },
   "status": {
     "draft": "Bozza",
@@ -253,5 +256,24 @@
   "billingLimit": {
     "reached": "Hai raggiunto il limite di prodotti del tuo piano",
     "upgradePrompt": "Aggiorna il piano per creare altri prodotti"
+  },
+  "dashboard": {
+    "welcomeTitle": "Benvenuto, {org}",
+    "welcomeSubtitle": "Panoramica del tuo workspace Passaporto",
+    "totalProducts": "Prodotti totali",
+    "publishedPassports": "Passaporti pubblicati",
+    "draftProducts": "Bozze",
+    "planUsage": "Utilizzo piano",
+    "planUsageCount": "{current} / {limit} prodotti",
+    "quickActions": "Azioni rapide",
+    "addProduct": "Aggiungi prodotto",
+    "generateQr": "Genera QR",
+    "recentProducts": "Prodotti recenti",
+    "noProducts": "Nessun prodotto ancora"
+  },
+  "notFound": {
+    "title": "Pagina non trovata",
+    "description": "La pagina che stai cercando non esiste o è stata spostata.",
+    "goHome": "Torna alla home"
   }
 }

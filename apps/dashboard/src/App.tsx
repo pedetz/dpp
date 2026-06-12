@@ -6,6 +6,8 @@ import { Spinner } from "@/components/ui/Spinner";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { LoginPage } from "@/pages/auth/LoginPage";
 import { OnboardingPage } from "@/pages/onboarding/OnboardingPage";
+import { DashboardPage } from "@/pages/DashboardPage";
+import { NotFoundPage } from "@/pages/NotFoundPage";
 import { ProductsPage } from "@/pages/products/ProductsPage";
 import { NewProductPage } from "@/pages/products/NewProductPage";
 import { ProductDetailPage } from "@/pages/products/ProductDetailPage";
@@ -42,7 +44,7 @@ function RequireAuth({ children }: { children: ReactElement }) {
 function RootRedirect() {
   const { session, loading } = useAuth();
   if (loading) return <FullScreenSpinner />;
-  return <Navigate to={session ? "/products" : "/login"} replace />;
+  return <Navigate to={session ? "/dashboard" : "/login"} replace />;
 }
 
 export function App() {
@@ -65,6 +67,7 @@ export function App() {
           </RequireAuth>
         }
       >
+        <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/new" element={<NewProductPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
@@ -74,7 +77,7 @@ export function App() {
         <Route path="/settings/members" element={<MembersPage />} />
         <Route path="/settings/billing" element={<BillingPage />} />
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }
